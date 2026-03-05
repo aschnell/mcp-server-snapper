@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
-from mcp.server.fastmcp import FastMCP
-from dbus import SystemBus, Interface, DBusException
 from datetime import datetime
+import argparse
 import logging
+from dbus import SystemBus, Interface, DBusException
+from mcp.server.fastmcp import FastMCP
 
 
 logging.basicConfig(filename = "mcp-server-snapper.log", level = logging.DEBUG)
@@ -12,7 +13,14 @@ logging.basicConfig(filename = "mcp-server-snapper.log", level = logging.DEBUG)
 mcp = FastMCP("SnapperServer")
 
 
+# TODO esp. when using http protocol the dbus connection to snapperd
+# stays up forever
+
+
 def get_snapper():
+    """
+    Create a snapper object
+    """
     # TODO reuse - seems to work already
     bus = SystemBus()
     snapper = Interface(bus.get_object('org.opensuse.Snapper', '/org/opensuse/Snapper'),
@@ -21,6 +29,9 @@ def get_snapper():
 
 
 def format_row(row):
+    """
+    Format an row in markdown. Row elements can be int or str
+    """
     return " | ".join([ str(e).replace("|", "\\|") for e in row ])
 
 
@@ -100,7 +111,8 @@ def create_snapshot(type: str, pre_number: int, description: str, cleanup: str) 
     """
     Create a file system snapshot using snapper.
     :param type: Type for the snapshot, either 'single', 'pre' or 'post'.
-    :param pre_number: Number of the corresponding pre snapshot. Required if type is 'post', otherwise ignored.
+    :param pre_number: Number of the corresponding pre snapshot. Required if type is 'post',
+           otherwise ignored.
     :param description: Description for the snapshot.
     :param cleanup: Cleanup algorithm for the snapshot like 'number' or 'timeline'.
     """
@@ -118,7 +130,7 @@ def create_snapshot(type: str, pre_number: int, description: str, cleanup: str) 
             number = snapper.CreatePostSnapshot("root", pre_number, description, cleanup, userdata)
         else:
             logging.error(f"Invalid snapshot type: {type}")
-            return f"Error creating snapshot: Invalid snapshot type"
+            return "Error creating snapshot: Invalid snapshot type"
 
         logging.info(f"snapper number of new snapshot: {number}")
 
@@ -131,4 +143,17 @@ def create_snapshot(type: str, pre_number: int, description: str, cleanup: str) 
 
 if __name__ == "__main__":
     logging.info("Server started")
-    mcp.run(transport = "stdio")
+
+    parser = argparse.ArgumentParser(description = "Run the MCP time server.")
+
+    parser.add_argument("--transport", choices = [ "stdio", "sse" ], default = "stdio",
+                        help = "Transport type (default: stdio)")
+
+    parser.add_argument("--port", type = int, default = 8000, help = "Port for SSE")
+
+    args = parser.parse_args()
+
+    if args.transport == "sse":
+        mcp.run(transport = "sse") # , port = args.port)
+    else:
+        mcp.run(transport = "stdio")
