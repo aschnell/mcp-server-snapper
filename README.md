@@ -1,8 +1,13 @@
 
 Installation:
--------------
+=============
 
 Copy mcp-server-snapper to /usr/bin.
+
+Three transport methods exist:
+
+STDIO:
+------
 
 When using mcphost add it to the configuration:
 
@@ -17,14 +22,48 @@ When using mcphost add it to the configuration:
 ```
 
 If you do not run mcp servers as root you have to allow
-mcp-server-snapper to use the snapper config nu adding the user
+mcp-server-snapper to use the snapper config by adding the user
 (e.g. "mcp-test") to ALLOW_USERS using (as root):
 
 snapper set-config ALLOW_USERS=mcp-test
 
+HTTP:
+-----
+
+The server must be started independently.
+
+mcp-server-snapper --transport http --port 8000
+
+```json
+{
+    "mcpServers": {
+        "my-server-snapper": {
+            "url": "http://localhost:8000/sse"
+        }
+    }
+}
+```
+
+HTTPS:
+------
+
+The server must be started independently.
+
+mcp-server-snapper --transport https --port 8443 --key localhost-key.pem --cert localhost.pem
+
+
+```json
+{
+    "mcpServers": {
+        "my-server-snapper": {
+             "url": "https://localhost:8443/sse"
+        }
+    }
+}
+```
 
 Examples:
----------
+=========
 
 "Please list all snapshots in a table."
 
