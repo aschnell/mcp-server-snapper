@@ -63,15 +63,45 @@ def list_configs() -> str:
 
 
 @mcp.tool()
-def list_snapshots() -> str:
+def get_config(config: str) -> str:
     """
-    List file system snapshots using snapper.
+    List the configuration values of a snapper config.
+    :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
+           query all values.
     """
 
     try:
         snapper = get_snapper()
 
-        snapshots = snapper.ListSnapshots("root")
+        values = snapper.GetConfig(config)
+
+        result = [ format_row([ "Key", "Value" ]) ]
+
+        for k, v in values[2].items():
+            row = [ k, v ]
+            result.append(format_row(row))
+
+        logging.error(f"snapper config: {result}")
+
+        return f"snapper config as table with header: {result}"
+
+    except DBusException as e:
+        logging.error(f"Snapper error: {e}")
+        return f"Error getting config: {e}"
+
+
+@mcp.tool()
+def list_snapshots(config: str) -> str:
+    """
+    List file system snapshots using snapper.
+    :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
+           query all values.
+    """
+
+    try:
+        snapper = get_snapper()
+
+        snapshots = snapper.ListSnapshots(config)
 
         result = [ format_row([ "Number", "Type", "Date", "Cleanup", "Description" ]) ]
 
@@ -108,9 +138,11 @@ def list_snapshots() -> str:
 
 
 @mcp.tool()
-def create_snapshot(type: str, pre_number: int, description: str, cleanup: str) -> str:
+def create_snapshot(config: str, type: str, pre_number: int, description: str, cleanup: str) -> str:
     """
     Create a file system snapshot using snapper.
+    :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
+           query all values.
     :param type: Type for the snapshot, either 'single', 'pre' or 'post'.
     :param pre_number: Number of the corresponding pre snapshot. Required if type is 'post',
            otherwise ignored.
@@ -124,11 +156,11 @@ def create_snapshot(type: str, pre_number: int, description: str, cleanup: str) 
         userdata = {}
 
         if type == "single":
-            number = snapper.CreateSingleSnapshot("root", description, cleanup, userdata)
+            number = snapper.CreateSingleSnapshot(config, description, cleanup, userdata)
         elif type == "pre":
-            number = snapper.CreatePreSnapshot("root", description, cleanup, userdata)
+            number = snapper.CreatePreSnapshot(config, description, cleanup, userdata)
         elif type == "post":
-            number = snapper.CreatePostSnapshot("root", pre_number, description, cleanup, userdata)
+            number = snapper.CreatePostSnapshot(config, pre_number, description, cleanup, userdata)
         else:
             logging.error(f"Invalid snapshot type: {type}")
             return "Error creating snapshot: Invalid snapshot type"
