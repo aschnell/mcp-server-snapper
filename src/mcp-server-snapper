@@ -53,7 +53,7 @@ def list_configs() -> str:
             row = [ config[0], config[1] ]
             result.append(format_row(row))
 
-        logging.error(f"list of snapper configs: {result}")
+        logging.info(f"list of snapper configs: {result}")
 
         return f"List of snapper configs as table with header: {result}"
 
@@ -81,7 +81,7 @@ def get_config(config: str) -> str:
             row = [ k, v ]
             result.append(format_row(row))
 
-        logging.error(f"snapper config: {result}")
+        logging.info(f"snapper config: {result}")
 
         return f"snapper config as table with header: {result}"
 
@@ -104,7 +104,7 @@ def set_config(config: str, values: dict[str, str]) -> str:
 
         snapper.SetConfig(config, values)
 
-        return f"successfully set values"
+        return "successfully set values"
 
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
@@ -149,7 +149,7 @@ def list_snapshots(config: str) -> str:
 
             result.append(format_row(row))
 
-        logging.error(f"list of snapper snapshots: {result}")
+        logging.info(f"list of snapper snapshots: {result}")
 
         return f"List of snapper snapshots as table with header: {result}"
 
@@ -209,7 +209,7 @@ def delete_snapshots(config: str, numbers: list[int]) -> str:
 
         snapper.DeleteSnapshots(config, numbers)
 
-        return f"Successfully deleted snapshots"
+        return "Successfully deleted snapshots"
 
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
