@@ -91,6 +91,27 @@ def get_config(config: str) -> str:
 
 
 @mcp.tool()
+def set_config(config: str, values: dict[str, str]) -> str:
+    """
+    List the configuration values of a snapper config.
+    :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
+           query all values.
+    :param values: List of key-value-pairs to set.
+    """
+
+    try:
+        snapper = get_snapper()
+
+        snapper.SetConfig(config, values)
+
+        return f"successfully set values"
+
+    except DBusException as e:
+        logging.error(f"Snapper error: {e}")
+        return f"Error setting config: {e}"
+
+
+@mcp.tool()
 def list_snapshots(config: str) -> str:
     """
     List file system snapshots using snapper.
@@ -165,9 +186,30 @@ def create_snapshot(config: str, type: str, pre_number: int, description: str, c
             logging.error(f"Invalid snapshot type: {type}")
             return "Error creating snapshot: Invalid snapshot type"
 
-        logging.info(f"snapper number of new snapshot: {number}")
+        logging.info(f"snapper number of created snapshot: {number}")
 
-        return f"Snapper number of new snapshot: {number}"
+        return f"Snapper number of created snapshot: {number}"
+
+    except DBusException as e:
+        logging.error(f"Snapper error: {e}")
+        return f"Error creating snapshot: {e}"
+
+
+@mcp.tool()
+def delete_snapshots(config: str, numbers: list[int]) -> str:
+    """
+    Delete one or more file system snapshot using snapper.
+    :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
+           query all values.
+    :param numbers: The snapshot numbers to delete.
+    """
+
+    try:
+        snapper = get_snapper()
+
+        snapper.DeleteSnapshots(config, numbers)
+
+        return f"Successfully deleted snapshots"
 
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
