@@ -6,9 +6,19 @@ import logging
 import uvicorn
 from dbus import SystemBus, Interface, DBusException
 from mcp.server.fastmcp import FastMCP
+from pydantic import BaseModel
 
 
 logging.basicConfig(filename = "mcp-server-snapper.log", level = logging.DEBUG)
+
+
+class Snapshot(BaseModel):
+    type: str
+    number: int
+    pre_number: int | None = None
+    date: str | None = None
+    description: str
+    cleanup: str
 
 
 mcp = FastMCP("SnapperServer")
@@ -29,17 +39,11 @@ def get_snapper():
     return snapper
 
 
-def format_row(row):
-    """
-    Format an row in markdown. Row elements can be int or str
-    """
-    return " | ".join([ str(e).replace("|", "\\|") for e in row ])
-
-
 @mcp.tool()
-def list_configs() -> str:
+def list_configs() -> dict[str, str]:
     """
-    List snapper configs.
+    Return the available snapper configs as a dictionary of key-value pairs with the config
+    name as the key and the subvolume path as the value.
     """
 
     try:
@@ -47,27 +51,28 @@ def list_configs() -> str:
 
         configs = snapper.ListConfigs()
 
-        result = [ format_row([ "Config", "Subvolume" ]) ]
+        result: dict[str, str] = {}
 
         for config in configs:
-            row = [ config[0], config[1] ]
-            result.append(format_row(row))
+            result[config[0]] = config[1]
 
         logging.info(f"list of snapper configs: {result}")
 
-        return f"List of snapper configs as table with header: {result}"
+        return result
 
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
-        return f"Error listing configs: {e}"
+        raise Exception("snapper error")
 
 
 @mcp.tool()
-def get_config(config: str) -> str:
+def get_config(config: str) -> dict[str, str]:
     """
-    List the configuration values of a snapper config.
+    Return the config values of a snapper config.
     :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
            query all values.
+    :returns: Config values of a snapper config as a dictionary of key-value pairs.
+    :rtype: dict[str, str]
     """
 
     try:
@@ -75,23 +80,22 @@ def get_config(config: str) -> str:
 
         values = snapper.GetConfig(config)
 
-        result = [ format_row([ "Key", "Value" ]) ]
+        result: dict[str, str] = {}
 
         for k, v in values[2].items():
-            row = [ k, v ]
-            result.append(format_row(row))
+            result[str(k)] = str(v)
 
         logging.info(f"snapper config: {result}")
 
-        return f"snapper config as table with header: {result}"
+        return result
 
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
-        return f"Error getting config: {e}"
+        raise Exception("snapper error")
 
 
 @mcp.tool()
-def set_config(config: str, values: dict[str, str]) -> str:
+def set_config(config: str, values: dict[str, str]) -> None:
     """
     List the configuration values of a snapper config.
     :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
@@ -104,19 +108,22 @@ def set_config(config: str, values: dict[str, str]) -> str:
 
         snapper.SetConfig(config, values)
 
-        return "successfully set values"
+        return
 
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
-        return f"Error setting config: {e}"
+        raise Exception("snapper error")
 
 
 @mcp.tool()
-def list_snapshots(config: str) -> str:
+def list_snapshots(config: str) -> list[Snapshot]:
     """
     List file system snapshots using snapper.
     :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
            query all values.
+    :returns: Snapper snapshots.
+    :rtype: list[Snapshot]
+
     """
 
     try:
@@ -124,42 +131,37 @@ def list_snapshots(config: str) -> str:
 
         snapshots = snapper.ListSnapshots(config)
 
-        result = [ format_row([ "Number", "Type", "Date", "Cleanup", "Description" ]) ]
+        result: list[Snapshot] = []
 
         for snapshot in snapshots:
 
-            row = [ snapshot[0] ]
+            tmp1 = tmp2 = tmp3 = None
 
             if snapshot[1] == 0:
-                row.append("single")
+                tmp1 = "single"
             elif snapshot[1] == 1:
-                row.append("pre")
+                tmp1 = "pre"
             elif snapshot[1] == 2:
-                row.append("post")
-            else:
-                row.append("")
+                tmp1 = "post"
+                tmp2 = snapshot[2]
 
             if snapshot[3] != -1:
-                row.append(datetime.fromtimestamp(snapshot[3]).strftime("%Y-%m-%d %H:%M:%S"))
-            else:
-                row.append("")
+                tmp3 = datetime.fromtimestamp(snapshot[3]).strftime("%Y-%m-%d %H:%M:%S")
 
-            row.append(snapshot[6])
-            row.append(snapshot[5])
-
-            result.append(format_row(row))
+            result.append(Snapshot(type = tmp1, number = snapshot[0], pre_number = tmp2,
+                                   date = tmp3, description = snapshot[5], cleanup = snapshot[6]))
 
         logging.info(f"list of snapper snapshots: {result}")
 
-        return f"List of snapper snapshots as table with header: {result}"
+        return result
 
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
-        return f"Error listing snapshots: {e}"
+        raise Exception("snapper error")
 
 
 @mcp.tool()
-def create_snapshot(config: str, type: str, pre_number: int, description: str, cleanup: str) -> str:
+def create_snapshot(config: str, type: str, pre_number: int, description: str, cleanup: str) -> int:
     """
     Create a file system snapshot using snapper.
     :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
@@ -169,6 +171,8 @@ def create_snapshot(config: str, type: str, pre_number: int, description: str, c
            otherwise ignored.
     :param description: Description for the snapshot.
     :param cleanup: Cleanup algorithm for the snapshot like 'number' or 'timeline'.
+    :returns: Number of the created snapshot.
+    :rtype: int
     """
 
     try:
@@ -184,19 +188,19 @@ def create_snapshot(config: str, type: str, pre_number: int, description: str, c
             number = snapper.CreatePostSnapshot(config, pre_number, description, cleanup, userdata)
         else:
             logging.error(f"Invalid snapshot type: {type}")
-            return "Error creating snapshot: Invalid snapshot type"
+            raise Exception("invalid snapshot type")
 
         logging.info(f"snapper number of created snapshot: {number}")
 
-        return f"Snapper number of created snapshot: {number}"
+        return number
 
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
-        return f"Error creating snapshot: {e}"
+        raise Exception("snapper error")
 
 
 @mcp.tool()
-def delete_snapshots(config: str, numbers: list[int]) -> str:
+def delete_snapshots(config: str, numbers: list[int]) -> None:
     """
     Delete one or more file system snapshot using snapper.
     :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
@@ -209,11 +213,11 @@ def delete_snapshots(config: str, numbers: list[int]) -> str:
 
         snapper.DeleteSnapshots(config, numbers)
 
-        return "Successfully deleted snapshots"
+        return
 
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
-        return f"Error creating snapshot: {e}"
+        raise Exception("snapper error")
 
 
 if __name__ == "__main__":

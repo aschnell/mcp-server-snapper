@@ -6,10 +6,13 @@ from mcpserver import McpServer
 
 mcp_server = McpServer()
 
-print("--- Listing Configs ---")
+print("--- Get Config ---")
 
 response = mcp_server.send_request("tools/call", {
-    "name": "list_configs"
+    "name": "get_config",
+    "arguments": {
+        "config": "root"
+    }
 })
 
 print(json.dumps(response, indent = 2))
@@ -29,7 +32,7 @@ structured_content = result["structuredContent"]
 
 print(structured_content)
 
-if structured_content.get('root') != "/":
-    raise Exception("root key missing or wrong value.")
+if structured_content.get("FSTYPE") != "btrfs":
+    raise Exception("FSTYPE key missing or wrong value.")
 
 print("Success.")
