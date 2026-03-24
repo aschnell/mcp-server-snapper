@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import json
 from mcpserver import McpServer
 
 
@@ -10,9 +9,7 @@ print("--- Listing Tools ---")
 
 response = mcp_server.send_request("tools/list")
 
-print(json.dumps(response, indent = 2))
-
-if not response or "result" not in response:
+if "result" not in response:
     raise Exception("Malformed response.")
 
 expected_tools = { "list_configs", "get_config", "set_config", "list_snapshots",

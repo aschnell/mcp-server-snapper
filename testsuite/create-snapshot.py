@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import json
 from mcpserver import McpServer
 
 
@@ -19,9 +18,7 @@ response = mcp_server.send_request("tools/call", {
     }
 })
 
-print(json.dumps(response, indent = 2))
-
-if not response or "result" not in response:
+if "result" not in response:
     raise Exception("Malformed response.")
 
 result = response["result"]

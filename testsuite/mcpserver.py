@@ -22,8 +22,6 @@ class McpServer:
             "clientInfo": { "name": "testsuite", "version": "1.0.0" }
         })
 
-        print(json.dumps(initialize_response, indent = 2))
-
 
     def send_request(self, method, params = None):
 
@@ -43,4 +41,8 @@ class McpServer:
         if not response:
             raise Exception("Failed to read response.")
 
-        return json.loads(response)
+        json_response = json.loads(response)
+
+        print(json.dumps(json_response, indent = 2))
+
+        return json_response
