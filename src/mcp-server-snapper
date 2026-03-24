@@ -19,6 +19,7 @@ class Snapshot(BaseModel):
     date: str | None = None
     description: str
     cleanup: str
+    userdata: dict[str, str]
 
 
 mcp = FastMCP("SnapperServer")
@@ -42,8 +43,10 @@ def get_snapper():
 @mcp.tool()
 def list_configs() -> dict[str, str]:
     """
-    Return the available snapper configs as a dictionary of key-value pairs with the config
-    name as the key and the subvolume path as the value.
+    Return the available snapper configs.
+    :returns: Available snapper configs as a dictionary of key-value pairs with the config
+              name as the key and the subvolume path as the value.
+    :rtype: dict[str, str]
     """
 
     try:
@@ -108,8 +111,6 @@ def set_config(config: str, values: dict[str, str]) -> None:
 
         snapper.SetConfig(config, values)
 
-        return
-
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
         raise Exception("snapper error")
@@ -121,9 +122,8 @@ def list_snapshots(config: str) -> list[Snapshot]:
     List file system snapshots using snapper.
     :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
            query all values.
-    :returns: Snapper snapshots.
+    :returns: Snapshots.
     :rtype: list[Snapshot]
-
     """
 
     try:
@@ -149,7 +149,8 @@ def list_snapshots(config: str) -> list[Snapshot]:
                 tmp3 = datetime.fromtimestamp(snapshot[3]).strftime("%Y-%m-%d %H:%M:%S")
 
             result.append(Snapshot(type = tmp1, number = snapshot[0], pre_number = tmp2,
-                                   date = tmp3, description = snapshot[5], cleanup = snapshot[6]))
+                                   date = tmp3, description = snapshot[5], cleanup = snapshot[6],
+                                   userdata = snapshot[7]))
 
         logging.info(f"list of snapper snapshots: {result}")
 
@@ -161,7 +162,8 @@ def list_snapshots(config: str) -> list[Snapshot]:
 
 
 @mcp.tool()
-def create_snapshot(config: str, type: str, pre_number: int, description: str, cleanup: str) -> int:
+def create_snapshot(config: str, type: str, pre_number: int, description: str, cleanup: str,
+                    userdata: dict[str, str]) -> int:
     """
     Create a file system snapshot using snapper.
     :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
@@ -171,14 +173,13 @@ def create_snapshot(config: str, type: str, pre_number: int, description: str, c
            otherwise ignored.
     :param description: Description for the snapshot.
     :param cleanup: Cleanup algorithm for the snapshot like 'number' or 'timeline'.
+    :param userdata: List of key-value pairs.
     :returns: Number of the created snapshot.
     :rtype: int
     """
 
     try:
         snapper = get_snapper()
-
-        userdata = {}
 
         if type == "single":
             number = snapper.CreateSingleSnapshot(config, description, cleanup, userdata)
@@ -213,8 +214,6 @@ def delete_snapshots(config: str, numbers: list[int]) -> None:
 
         snapper.DeleteSnapshots(config, numbers)
 
-        return
-
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
         raise Exception("snapper error")
@@ -234,6 +233,8 @@ if __name__ == "__main__":
     parser.add_argument("--cert", type = str, help = "Cert for HTTPS")
 
     args = parser.parse_args()
+
+    # logger.setLevel(logging.INFO)
 
     if args.transport == "https":
         if not args.key or not args.cert:
