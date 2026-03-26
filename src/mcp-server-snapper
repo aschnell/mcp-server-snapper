@@ -282,7 +282,7 @@ def rollback(config: str, number: int | None, description: str, cleanup: str,
 if __name__ == "__main__":
     logging.info("Server started")
 
-    parser = argparse.ArgumentParser(description = "Run the MCP time server.")
+    parser = argparse.ArgumentParser(description = "Run the snapper MCP server.")
 
     parser.add_argument("--transport", choices = [ "stdio", "http", "https" ], default = "stdio",
                         help = "Transport type (default: stdio)")
