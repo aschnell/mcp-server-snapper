@@ -1,0 +1,11 @@
+
+Prerequires:
+
+- standard snapper configuration (one config "root" for "/")
+
+- at least one snapshot
+
+Warning:
+
+- creates, modifies and deletes snapshots including doing rollback
+
