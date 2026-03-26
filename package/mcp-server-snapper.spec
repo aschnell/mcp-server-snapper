@@ -36,10 +36,22 @@ An MCP server for Snapper.
 %install
 install -d -m 0755 %{buildroot}%{_bindir}
 install -m 0755 src/mcp-server-snapper %{buildroot}%{_bindir}/mcp-server-snapper
+install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper
+install -m 0755 testsuite/*.py %{buildroot}%{_prefix}/lib/mcp-server-snapper/
 
 %files
 %license LICENSE
 %doc README.md
 %{_bindir}/mcp-server-snapper
+
+%package testsuite
+Summary:        Testsuite for package %{name}
+BuildArch:      noarch
+
+%description testsuite
+Testsuite for package %{name}
+
+%files testsuite
+%{_prefix}/lib/mcp-server-snapper/
 
 %changelog
