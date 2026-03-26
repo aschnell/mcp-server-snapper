@@ -13,7 +13,7 @@ if "result" not in response:
     raise Exception("Malformed response.")
 
 expected_tools = { "list_configs", "get_config", "set_config", "list_snapshots",
-                   "create_snapshot", "delete_snapshots" }
+                   "create_snapshot", "delete_snapshots", "rollback" }
 
 actual_tools = { tool['name'] for tool in response["result"].get("tools", []) }
 

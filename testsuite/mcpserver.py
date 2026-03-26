@@ -11,12 +11,12 @@ class McpServer:
 
         self.request_id = 0
 
-        self.process = subprocess.Popen([ "../src/mcp-server-snapper" ], stdin = subprocess.PIPE,
+        self.process = subprocess.Popen([ "/usr/bin/mcp-server-snapper" ], stdin = subprocess.PIPE,
                                         stdout = subprocess.PIPE, stderr = sys.stderr, text = True)
 
         print("--- Sending Initialize ---")
 
-        initialize_response = self.send_request("initialize", {
+        self.send_request("initialize", {
             "protocolVersion": "2025-11-25",
             "capabilities": {},
             "clientInfo": { "name": "testsuite", "version": "1.0.0" }

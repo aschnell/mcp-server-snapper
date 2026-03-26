@@ -14,7 +14,8 @@ response = mcp_server.send_request("tools/call", {
         "type": "invalid",
         "pre_number": 0,
         "description": "test",
-        "cleanup": "number"
+        "cleanup": "number",
+        "userdata": { "a": "b" }
     }
 })
 

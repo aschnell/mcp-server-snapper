@@ -5,16 +5,17 @@ from mcpserver import McpServer
 
 mcp_server = McpServer()
 
-print("--- Rollback ---")
+print("--- Create Snapshot ---")
 
 response = mcp_server.send_request("tools/call", {
-    "name": "rollback",
+    "name": "create_snapshot",
     "arguments": {
         "config": "root",
-        "number": 1,
+        "type": "single",
+        "pre_number": 0,
         "description": "testsuite",
         "cleanup": "number",
-        "userdata": {}
+        "userdata": { "a": "b" }
     }
 })
 
@@ -25,5 +26,17 @@ result = response["result"]
 
 if result.get("isError"):
     raise Exception("Error set in response.")
+
+if "structuredContent" not in result:
+    raise Exception("Malformed response.")
+
+structured_content = result["structuredContent"]
+
+number = structured_content["result"]
+
+print(number)
+
+if not isinstance(number, int):
+    raise Exception("Wrong type of result.")
 
 print("Success.")
