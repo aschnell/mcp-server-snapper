@@ -260,12 +260,10 @@ def rollback(config: str, number: int | None, description: str, cleanup: str,
         cmd_args = [ "/usr/bin/snapper", "--config", config, "rollback" ]
 
         if description:
-            cmd_args.append("--description")
-            cmd_args.append(description)
+            cmd_args.extend("--description", description)
 
         if cleanup:
-            cmd_args.append("--cleanup")
-            cmd_args.append(cleanup)
+            cmd_args.extend("--cleanup", cleanup)
 
         if number:
             cmd_args.append(str(number))
