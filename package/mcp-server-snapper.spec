@@ -23,7 +23,10 @@ Source:         %{name}-%{version}.tar.xz
 BuildArch:      noarch
 BuildRequires:  python-rpm-macros
 BuildRequires:  python3-devel
+Requires:       %{python_for_executables}-dbus-python
 Requires:       %{python_for_executables}-mcp
+Requires:       %{python_for_executables}-pydantic
+Requires:       %{python_for_executables}-uvicorn
 
 %description
 An MCP server for Snapper.
@@ -47,6 +50,7 @@ install -m 0755 testsuite/*.py %{buildroot}%{_prefix}/lib/mcp-server-snapper/
 %package testsuite
 Summary:        Testsuite for package %{name}
 BuildArch:      noarch
+Requires:       %{name}
 
 %description testsuite
 Testsuite for package %{name}
