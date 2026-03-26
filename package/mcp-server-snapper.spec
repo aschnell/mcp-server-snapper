@@ -21,7 +21,9 @@ Summary:        MCP Server for Snapper
 License:        MIT
 Source:         %{name}-%{version}.tar.xz
 BuildArch:      noarch
-BuildRequires:  python313-devel
+BuildRequires:  python-rpm-macros
+BuildRequires:  python3-devel
+Requires:       %{python_for_executables}-mcp
 
 %description
 An MCP server for Snapper.
