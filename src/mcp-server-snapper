@@ -3,6 +3,7 @@
 from datetime import datetime
 import argparse
 import logging
+import subprocess
 import uvicorn
 from dbus import SystemBus, Interface, DBusException
 from mcp.server.fastmcp import FastMCP
@@ -213,6 +214,67 @@ def delete_snapshots(config: str, numbers: list[int]) -> None:
         snapper = get_snapper()
 
         snapper.DeleteSnapshots(config, numbers)
+
+    except DBusException as e:
+        logging.error(f"Snapper error: {e}")
+        raise Exception("snapper error")
+
+
+def run_and_log_result(cmd_args):
+
+    try:
+
+        logging.info(cmd_args)
+
+        result = subprocess.run(cmd_args, capture_output = True,
+            text = True, check = False)
+
+        if result.stdout.strip():
+            logging.info(f"STDOUT:\n{result.stdout.strip()}")
+
+        if result.stderr.strip():
+            logging.error(f"STDERR:\n{result.stderr.strip()}")
+
+        return result.returncode
+
+    except FileNotFoundError:
+        logging.error(f"Command not found: {cmd_args[0]}")
+        return 127
+
+
+@mcp.tool()
+def rollback(config: str, number: int | None, description: str, cleanup: str,
+             userdata: dict[str, str]) -> None:
+    """
+    Rollback to a snapshot.
+    :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
+           query all values.
+    :param numbers: Optionally the number of the snapshot to rollback to.
+    :param description: Description for the new snapshot.
+    :param cleanup: Cleanup algorithm for the new snapshot like 'number' or 'timeline'.
+    :param userdata: List of key-value pairs.
+    """
+
+    try:
+
+        cmd_args = [ "/usr/bin/snapper", "--config", config, "rollback" ]
+
+        if description:
+            cmd_args.append("--description")
+            cmd_args.append(description)
+
+        if cleanup:
+            cmd_args.append("--cleanup")
+            cmd_args.append(cleanup)
+
+        if number:
+            cmd_args.append(str(number))
+
+        exit_code = run_and_log_result(cmd_args)
+
+        if exit_code != 0:
+            logging.error(f"Snapper error: {exit_code}")
+            raise Exception("snapper error")
 
     except DBusException as e:
         logging.error(f"Snapper error: {e}")
