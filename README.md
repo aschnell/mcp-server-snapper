@@ -2,8 +2,6 @@
 Installation:
 =============
 
-Copy mcp-server-snapper to /usr/bin.
-
 Three transport methods exist:
 
 STDIO:
