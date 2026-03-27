@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 import subprocess
 import json
 import sys
@@ -11,7 +12,9 @@ class McpServer:
 
         self.request_id = 0
 
-        self.process = subprocess.Popen([ "/usr/bin/mcp-server-snapper" ], stdin = subprocess.PIPE,
+        mcp_server = os.environ.get('MCPSERVER', "/usr/bin/mcp-server-snapper")
+
+        self.process = subprocess.Popen([ mcp_server ], stdin = subprocess.PIPE,
                                         stdout = subprocess.PIPE, stderr = sys.stderr, text = True)
 
         print("--- Sending Initialize ---")

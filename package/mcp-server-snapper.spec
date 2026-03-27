@@ -22,7 +22,10 @@ License:        MIT
 Source:         %{name}-%{version}.tar.xz
 BuildArch:      noarch
 BuildRequires:  python-rpm-macros
+BuildRequires:  python3-dbus-python
 BuildRequires:  python3-devel
+BuildRequires:  python3-mcp
+BuildRequires:  python3-uvicorn
 Requires:       %{python_for_executables}-dbus-python
 Requires:       %{python_for_executables}-mcp
 Requires:       %{python_for_executables}-pydantic
@@ -35,6 +38,9 @@ An MCP server for Snapper.
 %autosetup
 
 %build
+
+%check
+cd testsuite && MCPSERVER=../src/mcp-server-snapper ./tools.py
 
 %install
 install -d -m 0755 %{buildroot}%{_bindir}
