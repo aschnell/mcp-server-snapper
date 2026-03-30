@@ -249,7 +249,7 @@ def rollback(config: str, number: int | None, description: str, cleanup: str,
     Rollback to a snapshot.
     :param config: Snapper config to use. Often 'root'. Use the list_configs tool to
            query all values.
-    :param numbers: Optionally the number of the snapshot to rollback to.
+    :param number: Optionally the number of the snapshot to rollback to.
     :param description: Description for the new snapshot.
     :param cleanup: Cleanup algorithm for the new snapshot like 'number' or 'timeline'.
     :param userdata: List of key-value pairs.
