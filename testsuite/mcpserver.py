@@ -15,7 +15,8 @@ class McpServer:
         mcp_server = os.environ.get('MCPSERVER', "/usr/bin/mcp-server-snapper")
 
         self.process = subprocess.Popen([ mcp_server ], stdin = subprocess.PIPE,
-                                        stdout = subprocess.PIPE, stderr = sys.stderr, text = True)
+                                        stdout = subprocess.PIPE, stderr = sys.stderr,
+                                        universal_newlines = True)
 
         print("--- Sending Initialize ---")
 
