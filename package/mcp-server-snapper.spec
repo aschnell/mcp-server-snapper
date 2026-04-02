@@ -22,10 +22,17 @@ License:        MIT
 Source:         %{name}-%{version}.tar.xz
 BuildArch:      noarch
 BuildRequires:  python-rpm-macros
-BuildRequires:  python3-dbus-python
 BuildRequires:  python3-devel
+%if 0%{?suse_version} < 1600
+%{sle15_python_module_pythons}
+BuildRequires:  %{python_module dbus-python}
+BuildRequires:  %{python_module mcp}
+BuildRequires:  %{python_module uvicorn}
+%else
+BuildRequires:  python3-dbus-python
 BuildRequires:  python3-mcp
 BuildRequires:  python3-uvicorn
+%endif
 Requires:       %{python_for_executables}-dbus-python
 Requires:       %{python_for_executables}-mcp
 Requires:       %{python_for_executables}-pydantic
