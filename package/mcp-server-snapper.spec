@@ -1,7 +1,7 @@
 #
 # spec file for package mcp-server-snapper
 #
-# Copyright (c) 2025 SUSE LLC
+# Copyright (c) 2026 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -20,6 +20,7 @@ Release:        0
 Summary:        MCP Server for Snapper
 License:        MIT
 Source:         %{name}-%{version}.tar.xz
+Patch0:         sle15sp7.patch
 BuildArch:      noarch
 BuildRequires:  python-rpm-macros
 BuildRequires:  python3-devel
@@ -42,7 +43,11 @@ Requires:       %{python_for_executables}-uvicorn
 An MCP server for Snapper.
 
 %prep
-%autosetup
+%setup -q
+
+%if 0%{?suse_version} < 1600
+%patch -P 0 -p1
+%endif
 
 %build
 
