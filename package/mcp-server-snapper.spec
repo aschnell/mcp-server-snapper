@@ -19,6 +19,7 @@ Version:        0.1.0
 Release:        0
 Summary:        MCP Server for Snapper
 License:        MIT
+URL:            https://github.com/aschnell/mcp-server-snapper
 Source:         %{name}-%{version}.tar.xz
 Patch0:         sle15sp7.patch
 BuildArch:      noarch
