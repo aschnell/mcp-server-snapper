@@ -4,7 +4,6 @@ from datetime import datetime
 import argparse
 import logging
 import subprocess
-import uvicorn
 from dbus import SystemBus, Interface, DBusException
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel
@@ -284,26 +283,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description = "Run the snapper MCP server.")
 
-    parser.add_argument("--transport", choices = [ "stdio", "http", "https" ], default = "stdio",
-                        help = "Transport type (default: stdio)")
-
-    parser.add_argument("--port", type = int, default = 8000, help = "Port for HTTP")
-
-    parser.add_argument("--key", type = str, help = "Key for HTTPS")
-    parser.add_argument("--cert", type = str, help = "Cert for HTTPS")
-
     args = parser.parse_args()
 
-    # logger.setLevel(logging.INFO)
-
-    if args.transport == "https":
-        if not args.key or not args.cert:
-            parser.error("--transport https requires both --key and --cert")
-
-    if args.transport == "http":
-        uvicorn.run(mcp.sse_app(), host = "0.0.0.0", port = args.port)
-    elif args.transport == "https":
-        uvicorn.run(mcp.sse_app(), host = "0.0.0.0", port = args.port, ssl_keyfile = args.key,
-                    ssl_certfile = args.cert)
-    else:
-        mcp.run(transport = "stdio")
+    mcp.run(transport = "stdio")
