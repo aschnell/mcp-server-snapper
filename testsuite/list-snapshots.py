@@ -50,7 +50,7 @@ if result[0].get("date") is not None:
 if result[0].get("description") != "current":
     raise Exception("Malformed response.")
 
-if result[0].get("cleanup") != "":
+if result[0].get("cleanup_algorithm") != "":
     raise Exception("Malformed response.")
 
 print("Success.")

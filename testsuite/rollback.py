@@ -13,7 +13,7 @@ response = mcp_server.send_request("tools/call", {
         "config": "root",
         "number": 1,
         "description": "testsuite",
-        "cleanup": "number",
+        "cleanup_algorithm": "number",
         "userdata": {}
     }
 })

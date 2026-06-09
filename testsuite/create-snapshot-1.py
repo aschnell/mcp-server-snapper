@@ -14,7 +14,7 @@ response = mcp_server.send_request("tools/call", {
         "type": "single",
         "pre_number": 0,
         "description": "testsuite",
-        "cleanup": "number",
+        "cleanup_algorithm": "number",
         "userdata": { "a": "b" }
     }
 })
