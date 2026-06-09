@@ -2,7 +2,7 @@
 Installation:
 =============
 
-Three transport methods exist:
+Only one transport method exist:
 
 STDIO:
 ------
@@ -25,40 +25,6 @@ mcp-server-snapper to use the snapper config by adding the user
 
 snapper set-config ALLOW_USERS=mcp-test
 
-HTTP:
------
-
-The server must be started independently.
-
-mcp-server-snapper --transport http --port 8000
-
-```json
-{
-    "mcpServers": {
-        "my-server-snapper": {
-            "url": "http://localhost:8000/sse"
-        }
-    }
-}
-```
-
-HTTPS:
-------
-
-The server must be started independently.
-
-mcp-server-snapper --transport https --port 8443 --key localhost-key.pem --cert localhost.pem
-
-
-```json
-{
-    "mcpServers": {
-        "my-server-snapper": {
-             "url": "https://localhost:8443/sse"
-        }
-    }
-}
-```
 
 Examples:
 =========

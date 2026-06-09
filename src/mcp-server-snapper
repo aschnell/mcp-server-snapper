@@ -18,7 +18,7 @@ class Snapshot(BaseModel):
     pre_number: int | None = None
     date: str | None = None
     description: str
-    cleanup: str
+    cleanup_algorithm: str
     userdata: dict[str, str]
 
 
@@ -149,7 +149,7 @@ def list_snapshots(config: str) -> list[Snapshot]:
                 tmp3 = datetime.fromtimestamp(snapshot[3]).strftime("%Y-%m-%d %H:%M:%S")
 
             result.append(Snapshot(type = tmp1, number = snapshot[0], pre_number = tmp2,
-                                   date = tmp3, description = snapshot[5], cleanup = snapshot[6],
+                                   date = tmp3, description = snapshot[5], cleanup_algorithm = snapshot[6],
                                    userdata = snapshot[7]))
 
         logging.info(f"list of snapper snapshots: {result}")
@@ -162,7 +162,7 @@ def list_snapshots(config: str) -> list[Snapshot]:
 
 
 @mcp.tool()
-def create_snapshot(config: str, type: str, pre_number: int, description: str, cleanup: str,
+def create_snapshot(config: str, type: str, pre_number: int, description: str, cleanup_algorithm: str,
                     userdata: dict[str, str]) -> int:
     """
     Create a file system snapshot using snapper.
@@ -172,7 +172,7 @@ def create_snapshot(config: str, type: str, pre_number: int, description: str, c
     :param pre_number: Number of the corresponding pre snapshot. Required if type is 'post',
            otherwise ignored.
     :param description: Description for the snapshot.
-    :param cleanup: Cleanup algorithm for the snapshot like 'number' or 'timeline'.
+    :param cleanup_algorithm: Cleanup algorithm for the snapshot like 'number' or 'timeline'.
     :param userdata: List of key-value pairs.
     :returns: Number of the created snapshot.
     :rtype: int
@@ -182,11 +182,11 @@ def create_snapshot(config: str, type: str, pre_number: int, description: str, c
         snapper = get_snapper()
 
         if type == "single":
-            number = snapper.CreateSingleSnapshot(config, description, cleanup, userdata)
+            number = snapper.CreateSingleSnapshot(config, description, cleanup_algorithm, userdata)
         elif type == "pre":
-            number = snapper.CreatePreSnapshot(config, description, cleanup, userdata)
+            number = snapper.CreatePreSnapshot(config, description, cleanup_algorithm, userdata)
         elif type == "post":
-            number = snapper.CreatePostSnapshot(config, pre_number, description, cleanup, userdata)
+            number = snapper.CreatePostSnapshot(config, pre_number, description, cleanup_algorithm, userdata)
         else:
             logging.error(f"Invalid snapshot type: {type}")
             raise Exception("invalid snapshot type")
@@ -242,7 +242,7 @@ def run_and_log_result(cmd_args):
 
 
 @mcp.tool()
-def rollback(config: str, number: int | None, description: str, cleanup: str,
+def rollback(config: str, number: int | None, description: str, cleanup_algorithm: str,
              userdata: dict[str, str]) -> None:
     """
     Rollback to a snapshot.
@@ -250,7 +250,7 @@ def rollback(config: str, number: int | None, description: str, cleanup: str,
            query all values.
     :param number: Optionally the number of the snapshot to rollback to.
     :param description: Description for the new snapshot.
-    :param cleanup: Cleanup algorithm for the new snapshot like 'number' or 'timeline'.
+    :param cleanup_algorithm: Cleanup algorithm for the new snapshot like 'number' or 'timeline'.
     :param userdata: List of key-value pairs.
     """
 
@@ -261,8 +261,8 @@ def rollback(config: str, number: int | None, description: str, cleanup: str,
         if description:
             cmd_args.extend([ "--description", description ])
 
-        if cleanup:
-            cmd_args.extend([ "--cleanup", cleanup ])
+        if cleanup_algorithm:
+            cmd_args.extend([ "--cleanup-algorithm", cleanup_algorithm ])
 
         if number:
             cmd_args.append(str(number))
