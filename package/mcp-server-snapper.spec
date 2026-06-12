@@ -55,8 +55,8 @@ cd testsuite && MCPSERVER=../src/mcp-server-snapper ./tools.py
 %install
 install -d -m 0755 %{buildroot}%{_bindir}
 install -m 0755 src/mcp-server-snapper %{buildroot}%{_bindir}/mcp-server-snapper
-install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper
-install -m 0755 testsuite/*.py %{buildroot}%{_prefix}/lib/mcp-server-snapper/
+install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite
+install -m 0755 testsuite/*.py %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/
 
 %files
 %license LICENSE
@@ -71,7 +71,13 @@ Requires:       %{name}
 %description testsuite
 Testsuite for package %{name}
 
+Note: This package is for testing purposes only. It is intended for
+use by quality assurance and requires a dedicated testing environment.
+
+Do not install on a production system!
+
 %files testsuite
 %{_prefix}/lib/mcp-server-snapper/
+%{_prefix}/lib/mcp-server-snapper/testsuite/
 
 %changelog
