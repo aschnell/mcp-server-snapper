@@ -23,6 +23,7 @@ URL:            https://github.com/aschnell/mcp-server-snapper
 Source:         %{name}-%{version}.tar.xz
 Patch0:         sle15sp7.patch
 BuildArch:      noarch
+BuildRequires:  python3-base
 BuildRequires:  python-rpm-macros
 BuildRequires:  python3-devel
 %if 0%{?suse_version} < 1600
