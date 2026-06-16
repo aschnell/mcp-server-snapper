@@ -1,11 +1,12 @@
+Note: The programs here are only for testing purposes only. They are
+intended for use by quality assurance and requires a dedicated testing
+environment.
+
+Do not run the programs here on a production system!
+
 
 Prerequires:
 
 - standard snapper configuration (one config "root" for "/")
 
 - at least one snapshot
-
-Warning:
-
-- creates, modifies and deletes snapshots including doing rollback
-
