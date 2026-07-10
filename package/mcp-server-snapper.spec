@@ -58,6 +58,7 @@ install -d -m 0755 %{buildroot}%{_bindir}
 install -m 0755 src/mcp-server-snapper %{buildroot}%{_bindir}/mcp-server-snapper
 install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite
 install -m 0755 testsuite/*.py %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/
+install -m 0644 testsuite/README %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/
 
 %files
 %license LICENSE
