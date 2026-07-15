@@ -10,3 +10,24 @@ Prerequires:
 - standard snapper configuration (one config "root" for "/")
 
 - at least one snapshot
+
+
+
+Execute all python test scripts within the directory and ensure that
+each returns an exit code of `0` (indicating successful execution).
+
+Note: `mcpserver.py` is a communication helper class and should not be
+executed directly as a test.
+
+You can dynamically run all tests in the test suite and verify their
+exit codes using a loop:
+
+```bash
+for test in testsuite/*.py ; do
+    if [ "$(basename "$test")" != "mcpserver.py" ] ; then
+        echo "Running $test..."
+        python3 "$test" || { echo "Test $test failed!" ; exit 1; }
+    fi
+done
+echo "All tests passed!"
+```

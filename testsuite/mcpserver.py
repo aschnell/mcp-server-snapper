@@ -1,4 +1,20 @@
 #!/usr/bin/python3
+"""
+Test Utility: MCP Server Communication Harness
+
+Description:
+    This module provides the 'McpServer' helper class used across the test suite
+    to spin up, communicate with, and manage the life cycle of the snapper MCP server
+    subprocess. It implements the JSON-RPC 2.0 communication protocol over standard I/O (stdio).
+
+Key Features:
+    - Subprocess Management: Spawns the MCP server binary (default: '/usr/bin/mcp-server-snapper')
+      or uses the location specified by the 'MCPSERVER' environment variable.
+    - Handshake Protocol: Automatically executes the MCP initialization handshake protocol
+      ('initialize' request with appropriate client capabilities and info) upon instantiation.
+    - JSON-RPC Communication: Encapsulates sending requests, handling ID incrementation,
+      and parsing incoming JSON-RPC responses.
+"""
 
 import os
 import subprocess

@@ -1,4 +1,27 @@
 #!/usr/bin/python3
+"""
+Test Suite: Configuration Management
+Test Case: Get Configuration Details
+
+Description:
+    This integration test validates the 'get_config' tool of the snapper MCP server.
+    It requests configuration information for the standard 'root' configuration
+    and asserts that the returned details correctly match system expectations (e.g.,
+    btrfs filesystem type).
+
+Prerequisites:
+    - A standard snapper configuration named 'root' targeting '/'.
+
+Test Steps:
+    1. Initialize the MCP server connection.
+    2. Dispatch a 'get_config' tool call specifying the 'root' configuration.
+    3. Verify that the response contains a 'result' without 'isError'.
+    4. Assert that the response includes 'structuredContent'.
+    5. Verify that 'FSTYPE' key is present and has the value 'btrfs'.
+
+Expected Result:
+    Successful retrieval of configuration properties with a validated 'btrfs' filesystem type.
+"""
 
 from mcpserver import McpServer
 
