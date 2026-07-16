@@ -18,7 +18,7 @@ Name:           mcp-server-snapper
 Version:        0.3.0
 Release:        0
 Summary:        MCP Server for Snapper
-License:        MIT
+License:        MIT AND BSD-2-Clause AND BSD-3-Clause
 URL:            https://github.com/aschnell/mcp-server-snapper
 Source:         %{name}-%{version}.tar.xz
 BuildRequires:  go >= 1.25
@@ -29,6 +29,8 @@ An MCP server for Snapper.
 
 %prep
 %setup -q
+cp vendor/github.com/godbus/dbus/v5/LICENSE LICENSE-dbus
+cp vendor/golang.org/x/sys/LICENSE LICENSE-sys
 
 %build
 ./build.sh
@@ -62,6 +64,8 @@ install -m 0755 testsuite/tools/tools %{buildroot}%{_prefix}/lib/mcp-server-snap
 
 %files
 %license LICENSE
+%license LICENSE-dbus
+%license LICENSE-sys
 %doc README.md
 %{_bindir}/mcp-server-snapper
 
