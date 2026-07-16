@@ -42,8 +42,23 @@ done
 %install
 install -d -m 0755 %{buildroot}%{_bindir}
 install -m 0755 src/mcp-server-snapper %{buildroot}%{_bindir}/mcp-server-snapper
+
 install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite
-cp -r testsuite/* %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/
+install -m 0644 testsuite/README %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/README
+install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/create-snapshot-1
+install -m 0755 testsuite/create-snapshot-1/create-snapshot-1 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/create-snapshot-1/create-snapshot-1
+install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/create-snapshot-2
+install -m 0755 testsuite/create-snapshot-2/create-snapshot-2 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/create-snapshot-2/create-snapshot-2
+install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/get-config
+install -m 0755 testsuite/get-config/get-config %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/get-config/get-config
+install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/list-configs
+install -m 0755 testsuite/list-configs/list-configs %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/list-configs/list-configs
+install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/list-snapshots
+install -m 0755 testsuite/list-snapshots/list-snapshots %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/list-snapshots/list-snapshots
+install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/rollback
+install -m 0755 testsuite/rollback/rollback %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/rollback/rollback
+install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/tools
+install -m 0755 testsuite/tools/tools %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/tools/tools
 
 %files
 %license LICENSE
