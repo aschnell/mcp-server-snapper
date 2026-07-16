@@ -5,7 +5,7 @@ environment.
 Do not run the programs here on a production system!
 
 
-Prerequires:
+Prerequisites:
 
 - standard snapper configuration (one config "root" for "/")
 
@@ -13,21 +13,18 @@ Prerequires:
 
 
 
-Execute all python test scripts within the directory and ensure that
-each returns an exit code of `0` (indicating successful execution).
-
-Note: `mcpserver.py` is a communication helper class and should not be
-executed directly as a test.
-
-You can dynamically run all tests in the test suite and verify their
-exit codes using a loop:
+You can run any test program individually:
 
 ```bash
-for test in testsuite/*.py ; do
-    if [ "$(basename "$test")" != "mcpserver.py" ] ; then
-        echo "Running $test..."
-        python3 "$test" || { echo "Test $test failed!" ; exit 1; }
-    fi
+MCPSERVER=/usr/bin/mcp-server-snapper ./list-configs/list-configs
+```
+
+Or run all tests in the test suite using a loop:
+
+```bash
+for test in list-configs/list-configs get-config/get-config tools/tools list-snapshots/list-snapshots create-snapshot-1/create-snapshot-1 create-snapshot-2/create-snapshot-2 rollback/rollback ; do
+    echo "Running $test..."
+    MCPSERVER=/usr/bin/mcp-server-snapper "./$test" || { echo "Test $test failed!" ; exit 1; }
 done
 echo "All tests passed!"
 ```

@@ -15,28 +15,14 @@
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 
 Name:           mcp-server-snapper
-Version:        0.2.0
+Version:        0.3.0
 Release:        0
 Summary:        MCP Server for Snapper
 License:        MIT
 URL:            https://github.com/aschnell/mcp-server-snapper
 Source:         %{name}-%{version}.tar.xz
-Patch0:         sle15sp7.patch
-BuildArch:      noarch
-BuildRequires:  python3-base
-BuildRequires:  python-rpm-macros
-BuildRequires:  python3-devel
-%if 0%{?suse_version} < 1600
-%{sle15_python_module_pythons}
-BuildRequires:  %{python_module dbus-python}
-BuildRequires:  %{python_module mcp}
-%else
-BuildRequires:  python3-dbus-python
-BuildRequires:  python3-mcp
-%endif
-Requires:       %{python_for_executables}-dbus-python
-Requires:       %{python_for_executables}-mcp
-Requires:       %{python_for_executables}-pydantic
+BuildRequires:  go >= 1.22
+Requires:       snapper
 
 %description
 An MCP server for Snapper.
@@ -44,21 +30,20 @@ An MCP server for Snapper.
 %prep
 %setup -q
 
-%if 0%{?suse_version} < 1600
-%patch -P 0 -p1
-%endif
-
 %build
+./build.sh
 
 %check
-cd testsuite && MCPSERVER=../src/mcp-server-snapper ./tools.py
+for test in list-configs/list-configs get-config/get-config tools/tools list-snapshots/list-snapshots create-snapshot-1/create-snapshot-1 create-snapshot-2/create-snapshot-2 rollback/rollback ; do
+    echo "Running $test..."
+    MCPSERVER=../src/mcp-server-snapper "testsuite/$test" || { echo "Test $test failed!" ; exit 1; }
+done
 
 %install
 install -d -m 0755 %{buildroot}%{_bindir}
 install -m 0755 src/mcp-server-snapper %{buildroot}%{_bindir}/mcp-server-snapper
 install -d -m 0755 %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite
-install -m 0755 testsuite/*.py %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/
-install -m 0644 testsuite/README %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/
+cp -r testsuite/* %{buildroot}%{_prefix}/lib/mcp-server-snapper/testsuite/
 
 %files
 %license LICENSE
@@ -67,7 +52,6 @@ install -m 0644 testsuite/README %{buildroot}%{_prefix}/lib/mcp-server-snapper/t
 
 %package testsuite
 Summary:        Testsuite for package %{name}
-BuildArch:      noarch
 Requires:       %{name}
 
 %description testsuite
