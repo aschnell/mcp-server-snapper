@@ -21,7 +21,7 @@ Summary:        MCP Server for Snapper
 License:        MIT
 URL:            https://github.com/aschnell/mcp-server-snapper
 Source:         %{name}-%{version}.tar.xz
-BuildRequires:  go >= 1.22
+BuildRequires:  go >= 1.25
 Requires:       snapper
 
 %description
