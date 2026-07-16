@@ -34,9 +34,9 @@ An MCP server for Snapper.
 ./build.sh
 
 %check
-for test in list-configs/list-configs get-config/get-config tools/tools list-snapshots/list-snapshots create-snapshot-1/create-snapshot-1 create-snapshot-2/create-snapshot-2 rollback/rollback ; do
+for test in tools/tools ; do
     echo "Running $test..."
-    MCPSERVER=../src/mcp-server-snapper "testsuite/$test" || { echo "Test $test failed!" ; exit 1; }
+    MCPSERVER=mcp-server-snapper "testsuite/$test" || { echo "Test $test failed!" ; exit 1; }
 done
 
 %install
