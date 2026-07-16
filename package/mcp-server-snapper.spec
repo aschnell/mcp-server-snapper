@@ -36,7 +36,7 @@ An MCP server for Snapper.
 %check
 for test in tools/tools ; do
     echo "Running $test..."
-    MCPSERVER=mcp-server-snapper "testsuite/$test" || { echo "Test $test failed!" ; exit 1; }
+    MCPSERVER=src/mcp-server-snapper "testsuite/$test" || { echo "Test $test failed!" ; exit 1; }
 done
 
 %install
