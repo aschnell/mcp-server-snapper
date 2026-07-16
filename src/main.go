@@ -151,14 +151,6 @@ func main() {
 	}
 	flag.Parse()
 
-	// Establish D-Bus connection
-	conn, err := dbus.ConnectSystemBus()
-	if err != nil {
-		logError("Failed to connect to D-Bus System Bus: %v", err)
-		os.Exit(1)
-	}
-	defer conn.Close()
-
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -187,21 +179,21 @@ func main() {
 		}
 
 		// Process the request
-		respLine := handleRPCRequest(conn, &req)
+		respLine := handleRPCRequest(&req)
 		if respLine != "" {
 			fmt.Println(respLine)
 		}
 	}
 }
 
-func handleRPCRequest(conn *dbus.Conn, req *RPCRequest) string {
+func handleRPCRequest(req *RPCRequest) string {
 	switch req.Method {
 	case "initialize":
 		return handleInitialize(req)
 	case "tools/list":
 		return handleToolsList(req)
 	case "tools/call":
-		return handleToolsCall(conn, req)
+		return handleToolsCall(req)
 	default:
 		// If it's a notification, do not send response
 		if req.ID == nil {
@@ -343,8 +335,24 @@ const toolsListJSON = `{
         "$defs": {
           "Snapshot": {
             "properties": {
-              "type": {
-                "title": "Type",
+              "cleanup_algorithm": {
+                "title": "Cleanup Algorithm",
+                "type": "string"
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Date"
+              },
+              "description": {
+                "title": "Description",
                 "type": "string"
               },
               "number": {
@@ -363,24 +371,8 @@ const toolsListJSON = `{
                 "default": null,
                 "title": "Pre Number"
               },
-              "date": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "default": null,
-                "title": "Date"
-              },
-              "description": {
-                "title": "Description",
-                "type": "string"
-              },
-              "cleanup_algorithm": {
-                "title": "Cleanup Algorithm",
+              "type": {
+                "title": "Type",
                 "type": "string"
               },
               "userdata": {
@@ -423,24 +415,24 @@ const toolsListJSON = `{
       "description": "\nCreate a file system snapshot using snapper.\n:param config: Snapper config to use. Often 'root'. Use the list_configs tool to\n       query all values.\n:param type: Type for the snapshot, either 'single', 'pre' or 'post'.\n:param pre_number: Number of the corresponding pre snapshot. Required if type is 'post',\n       otherwise ignored.\n:param description: Description for the snapshot.\n:param cleanup_algorithm: Cleanup algorithm for the snapshot like 'number' or 'timeline'.\n:param userdata: List of key-value pairs.\n:returns: Number of the created snapshot.\n:rtype: int\n",
       "inputSchema": {
         "properties": {
+          "cleanup_algorithm": {
+            "title": "Cleanup Algorithm",
+            "type": "string"
+          },
           "config": {
             "title": "Config",
             "type": "string"
           },
-          "type": {
-            "title": "Type",
+          "description": {
+            "title": "Description",
             "type": "string"
           },
           "pre_number": {
             "title": "Pre Number",
             "type": "integer"
           },
-          "description": {
-            "title": "Description",
-            "type": "string"
-          },
-          "cleanup_algorithm": {
-            "title": "Cleanup Algorithm",
+          "type": {
+            "title": "Type",
             "type": "string"
           },
           "userdata": {
@@ -519,8 +511,16 @@ const toolsListJSON = `{
       "description": "\nRollback to a snapshot.\n:param config: Snapper config to use. Often 'root'. Use the list_configs tool to\n       query all values.\n:param number: Optionally the number of the snapshot to rollback to.\n:param description: Description for the new snapshot.\n:param cleanup_algorithm: Cleanup algorithm for the new snapshot like 'number' or 'timeline'.\n:param userdata: List of key-value pairs.\n",
       "inputSchema": {
         "properties": {
+          "cleanup_algorithm": {
+            "title": "Cleanup Algorithm",
+            "type": "string"
+          },
           "config": {
             "title": "Config",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
             "type": "string"
           },
           "number": {
@@ -533,14 +533,6 @@ const toolsListJSON = `{
               }
             ],
             "title": "Number"
-          },
-          "description": {
-            "title": "Description",
-            "type": "string"
-          },
-          "cleanup_algorithm": {
-            "title": "Cleanup Algorithm",
-            "type": "string"
           },
           "userdata": {
             "additionalProperties": {
@@ -590,7 +582,7 @@ func handleToolsList(req *RPCRequest) string {
 	return string(bytes)
 }
 
-func handleToolsCall(dbusConn *dbus.Conn, req *RPCRequest) string {
+func handleToolsCall(req *RPCRequest) string {
 	var params ToolCallParams
 	if err := json.Unmarshal(req.Params, &params); err != nil {
 		logError("Failed to unmarshal tool call params: %v", err)
@@ -602,37 +594,37 @@ func handleToolsCall(dbusConn *dbus.Conn, req *RPCRequest) string {
 
 	switch params.Name {
 	case "list_configs":
-		val, err = listConfigs(dbusConn)
+		val, err = listConfigs()
 	case "get_config":
 		var args GetConfigArgs
 		if err := json.Unmarshal(params.Arguments, &args); err != nil {
 			return makeToolErrorResponse(req.ID, params.Name, fmt.Errorf("invalid arguments: %w", err))
 		}
-		val, err = getConfig(dbusConn, args.Config)
+		val, err = getConfig(args.Config)
 	case "set_config":
 		var args SetConfigArgs
 		if err := json.Unmarshal(params.Arguments, &args); err != nil {
 			return makeToolErrorResponse(req.ID, params.Name, fmt.Errorf("invalid arguments: %w", err))
 		}
-		val, err = setConfig(dbusConn, args.Config, args.Values)
+		val, err = setConfig(args.Config, args.Values)
 	case "list_snapshots":
 		var args ListSnapshotsArgs
 		if err := json.Unmarshal(params.Arguments, &args); err != nil {
 			return makeToolErrorResponse(req.ID, params.Name, fmt.Errorf("invalid arguments: %w", err))
 		}
-		val, err = listSnapshots(dbusConn, args.Config)
+		val, err = listSnapshots(args.Config)
 	case "create_snapshot":
 		var args CreateSnapshotArgs
 		if err := json.Unmarshal(params.Arguments, &args); err != nil {
 			return makeToolErrorResponse(req.ID, params.Name, fmt.Errorf("invalid arguments: %w", err))
 		}
-		val, err = createSnapshot(dbusConn, args.Config, args.Type, args.PreNumber, args.Description, args.CleanupAlgorithm, args.Userdata)
+		val, err = createSnapshot(args.Config, args.Type, args.PreNumber, args.Description, args.CleanupAlgorithm, args.Userdata)
 	case "delete_snapshots":
 		var args DeleteSnapshotsArgs
 		if err := json.Unmarshal(params.Arguments, &args); err != nil {
 			return makeToolErrorResponse(req.ID, params.Name, fmt.Errorf("invalid arguments: %w", err))
 		}
-		val, err = deleteSnapshots(dbusConn, args.Config, args.Numbers)
+		val, err = deleteSnapshots(args.Config, args.Numbers)
 	case "rollback":
 		var args RollbackArgs
 		if err := json.Unmarshal(params.Arguments, &args); err != nil {
@@ -651,14 +643,20 @@ func handleToolsCall(dbusConn *dbus.Conn, req *RPCRequest) string {
 	return makeSuccessResponse(req.ID, params.Name, val)
 }
 
-func listConfigs(conn *dbus.Conn) (interface{}, error) {
+func listConfigs() (interface{}, error) {
+	conn, err := dbus.ConnectSystemBus()
+	if err != nil {
+		return nil, fmt.Errorf("snapper error")
+	}
+	defer conn.Close()
+
 	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	var configs []struct {
 		Name      string
 		Subvolume string
 		Config    map[string]string
 	}
-	err := obj.Call("org.opensuse.Snapper.ListConfigs", 0).Store(&configs)
+	err = obj.Call("org.opensuse.Snapper.ListConfigs", 0).Store(&configs)
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
 	}
@@ -671,14 +669,20 @@ func listConfigs(conn *dbus.Conn) (interface{}, error) {
 	return res, nil
 }
 
-func getConfig(conn *dbus.Conn, configName string) (interface{}, error) {
+func getConfig(configName string) (interface{}, error) {
+	conn, err := dbus.ConnectSystemBus()
+	if err != nil {
+		return nil, fmt.Errorf("snapper error")
+	}
+	defer conn.Close()
+
 	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	var cfg struct {
 		Name      string
 		Subvolume string
 		Config    map[string]string
 	}
-	err := obj.Call("org.opensuse.Snapper.GetConfig", 0, configName).Store(&cfg)
+	err = obj.Call("org.opensuse.Snapper.GetConfig", 0, configName).Store(&cfg)
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
 	}
@@ -691,16 +695,28 @@ func getConfig(conn *dbus.Conn, configName string) (interface{}, error) {
 	return res, nil
 }
 
-func setConfig(conn *dbus.Conn, configName string, values map[string]string) (interface{}, error) {
+func setConfig(configName string, values map[string]string) (interface{}, error) {
+	conn, err := dbus.ConnectSystemBus()
+	if err != nil {
+		return nil, fmt.Errorf("snapper error")
+	}
+	defer conn.Close()
+
 	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
-	err := obj.Call("org.opensuse.Snapper.SetConfig", 0, configName, values).Err
+	err = obj.Call("org.opensuse.Snapper.SetConfig", 0, configName, values).Err
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
 	}
 	return nil, nil
 }
 
-func listSnapshots(conn *dbus.Conn, configName string) (interface{}, error) {
+func listSnapshots(configName string) (interface{}, error) {
+	conn, err := dbus.ConnectSystemBus()
+	if err != nil {
+		return nil, fmt.Errorf("snapper error")
+	}
+	defer conn.Close()
+
 	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	var rawSnapshots []struct {
 		Number           uint32
@@ -712,7 +728,7 @@ func listSnapshots(conn *dbus.Conn, configName string) (interface{}, error) {
 		CleanupAlgorithm string
 		Userdata         map[string]string
 	}
-	err := obj.Call("org.opensuse.Snapper.ListSnapshots", 0, configName).Store(&rawSnapshots)
+	err = obj.Call("org.opensuse.Snapper.ListSnapshots", 0, configName).Store(&rawSnapshots)
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
 	}
@@ -757,10 +773,15 @@ func listSnapshots(conn *dbus.Conn, configName string) (interface{}, error) {
 	return res, nil
 }
 
-func createSnapshot(conn *dbus.Conn, configName string, typeStr string, preNumber int, description string, cleanupAlgorithm string, userdata map[string]string) (interface{}, error) {
+func createSnapshot(configName string, typeStr string, preNumber int, description string, cleanupAlgorithm string, userdata map[string]string) (interface{}, error) {
+	conn, err := dbus.ConnectSystemBus()
+	if err != nil {
+		return nil, fmt.Errorf("snapper error")
+	}
+	defer conn.Close()
+
 	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	var number uint32
-	var err error
 
 	if userdata == nil {
 		userdata = make(map[string]string)
@@ -786,13 +807,19 @@ func createSnapshot(conn *dbus.Conn, configName string, typeStr string, preNumbe
 	return int(number), nil
 }
 
-func deleteSnapshots(conn *dbus.Conn, configName string, numbers []int) (interface{}, error) {
+func deleteSnapshots(configName string, numbers []int) (interface{}, error) {
+	conn, err := dbus.ConnectSystemBus()
+	if err != nil {
+		return nil, fmt.Errorf("snapper error")
+	}
+	defer conn.Close()
+
 	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	dbusNums := make([]uint32, len(numbers))
 	for i, n := range numbers {
 		dbusNums[i] = uint32(n)
 	}
-	err := obj.Call("org.opensuse.Snapper.DeleteSnapshots", 0, configName, dbusNums).Err
+	err = obj.Call("org.opensuse.Snapper.DeleteSnapshots", 0, configName, dbusNums).Err
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
 	}
