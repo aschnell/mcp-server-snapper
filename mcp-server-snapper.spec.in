@@ -31,6 +31,14 @@ An MCP server for Snapper.
 %setup -q
 cp vendor/github.com/godbus/dbus/v5/LICENSE LICENSE-dbus
 cp vendor/golang.org/x/sys/LICENSE LICENSE-sys
+cp vendor/github.com/modelcontextprotocol/go-sdk/LICENSE LICENSE-mcp
+cp vendor/github.com/google/jsonschema-go/LICENSE LICENSE-jsonschema
+cp vendor/github.com/yosida95/uritemplate/v3/LICENSE LICENSE-uritemplate
+cp vendor/github.com/segmentio/encoding/LICENSE LICENSE-encoding
+cp vendor/github.com/segmentio/asm/LICENSE LICENSE-asm
+cp vendor/golang.org/x/oauth2/LICENSE LICENSE-oauth2
+cp vendor/golang.org/x/sync/LICENSE LICENSE-sync
+cp vendor/golang.org/x/time/LICENSE LICENSE-time
 
 %build
 ./build.sh
@@ -66,6 +74,15 @@ install -m 0755 testsuite/tools/tools %{buildroot}%{_prefix}/lib/mcp-server-snap
 %license LICENSE
 %license LICENSE-dbus
 %license LICENSE-sys
+%license LICENSE-mcp
+%license LICENSE-jsonschema
+%license LICENSE-uritemplate
+%license LICENSE-encoding
+%license LICENSE-asm
+%license LICENSE-oauth2
+%license LICENSE-sync
+%license LICENSE-time
+
 %doc README.md
 %{_bindir}/mcp-server-snapper
 
