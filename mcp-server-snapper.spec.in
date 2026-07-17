@@ -15,7 +15,7 @@
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 
 Name:           mcp-server-snapper
-Version:        0.3.0
+Version:        @VERSION@
 Release:        0
 Summary:        MCP Server for Snapper
 License:        MIT AND BSD-2-Clause AND BSD-3-Clause

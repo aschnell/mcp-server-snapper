@@ -1,8 +1,11 @@
 #!/usr/bin/bash -ex
 
+# Get version from VERSION file
+VERSION=$(cat "$(dirname "$0")/VERSION")
+
 # Compile the main mcp-server-snapper binary
-echo "Building mcp-server-snapper..."
-go build -mod=vendor -o src/mcp-server-snapper src/main.go
+echo "Building mcp-server-snapper with version ${VERSION}..."
+go build -mod=vendor -ldflags "-X main.Version=${VERSION}" -o src/mcp-server-snapper src/main.go
 
 # Compile individual test programs
 echo "Building testsuite programs..."

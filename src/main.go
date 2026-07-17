@@ -125,6 +125,9 @@ type RollbackArgs struct {
 	Userdata         map[string]string `json:"userdata"`
 }
 
+// Version is the server version dynamically set at build time.
+var Version = "0.3.0"
+
 // Global logger file setup
 var logFile *os.File
 
@@ -235,7 +238,7 @@ func handleInitialize(req *RPCRequest) string {
 			},
 			"serverInfo": map[string]string{
 				"name":    "SnapperServer",
-				"version": "1.28.1",
+				"version": Version,
 			},
 		},
 	}
