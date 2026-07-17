@@ -47,9 +47,9 @@ func main() {
 	defer srv.Close()
 
 	fmt.Println("--- List Snapshots ---")
-	resp, err := srv.SendRequest("tools/call", map[string]interface{}{
+	resp, err := srv.SendRequest("tools/call", map[string]any{
 		"name": "list_snapshots",
-		"arguments": map[string]interface{}{
+		"arguments": map[string]any{
 			"config": "root",
 		},
 	})
@@ -58,7 +58,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	result, ok := resp["result"].(map[string]interface{})
+	result, ok := resp["result"].(map[string]any)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Malformed response: result missing\n")
 		os.Exit(1)
@@ -69,13 +69,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	structuredContent, ok := result["structuredContent"].(map[string]interface{})
+	structuredContent, ok := result["structuredContent"].(map[string]any)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Malformed response: structuredContent missing\n")
 		os.Exit(1)
 	}
 
-	resultsList, ok := structuredContent["result"].([]interface{})
+	resultsList, ok := structuredContent["result"].([]any)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Malformed response: result is not a list\n")
 		os.Exit(1)
@@ -86,7 +86,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	firstSnap, ok := resultsList[0].(map[string]interface{})
+	firstSnap, ok := resultsList[0].(map[string]any)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Malformed snapshot object\n")
 		os.Exit(1)

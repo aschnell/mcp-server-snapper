@@ -45,13 +45,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	result, ok := resp["result"].(map[string]interface{})
+	result, ok := resp["result"].(map[string]any)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Malformed response: result missing\n")
 		os.Exit(1)
 	}
 
-	toolsList, ok := result["tools"].([]interface{})
+	toolsList, ok := result["tools"].([]any)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Malformed response: tools missing\n")
 		os.Exit(1)
@@ -59,17 +59,17 @@ func main() {
 
 	expectedTools := map[string]bool{
 		"list_configs":     true,
-		"get_config":        true,
-		"set_config":        true,
+		"get_config":       true,
+		"set_config":       true,
 		"list_snapshots":   true,
-		"create_snapshot":   true,
+		"create_snapshot":  true,
 		"delete_snapshots": true,
 		"rollback":         true,
 	}
 
 	actualTools := make(map[string]bool)
 	for _, tVal := range toolsList {
-		tObj, ok := tVal.(map[string]interface{})
+		tObj, ok := tVal.(map[string]any)
 		if !ok {
 			fmt.Fprintf(os.Stderr, "Malformed tool object\n")
 			os.Exit(1)

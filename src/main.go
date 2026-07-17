@@ -37,7 +37,7 @@ type TextContent struct {
 // ToolResult represents the CallToolResult structure expected by MCP clients.
 type ToolResult struct {
 	Content           []TextContent `json:"content"`
-	StructuredContent interface{}   `json:"structuredContent,omitempty"`
+	StructuredContent any           `json:"structuredContent,omitempty"`
 	IsError           bool          `json:"isError"`
 }
 
@@ -53,7 +53,7 @@ type RPCRequest struct {
 type RPCResponse struct {
 	JSONRPC string           `json:"jsonrpc"`
 	ID      *json.RawMessage `json:"id"`
-	Result  interface{}      `json:"result,omitempty"`
+	Result  any              `json:"result,omitempty"`
 }
 
 // RPCError represents a standard JSON-RPC 2.0 error object.
@@ -129,15 +129,15 @@ func initLogger() {
 	}
 }
 
-func logInfo(format string, v ...interface{}) {
+func logInfo(format string, v ...any) {
 	log.Printf("INFO:root:"+format, v...)
 }
 
-func logError(format string, v ...interface{}) {
+func logError(format string, v ...any) {
 	log.Printf("ERROR:root:"+format, v...)
 }
 
-func logDebug(format string, v ...interface{}) {
+func logDebug(format string, v ...any) {
 	log.Printf("DEBUG:root:"+format, v...)
 }
 
@@ -209,18 +209,18 @@ func handleInitialize(req *RPCRequest) string {
 	res := RPCResponse{
 		JSONRPC: "2.0",
 		ID:      req.ID,
-		Result: map[string]interface{}{
+		Result: map[string]any{
 			"protocolVersion": "2025-11-25",
-			"capabilities": map[string]interface{}{
-				"experimental": map[string]interface{}{},
-				"prompts": map[string]interface{}{
+			"capabilities": map[string]any{
+				"experimental": map[string]any{},
+				"prompts": map[string]any{
 					"listChanged": false,
 				},
-				"resources": map[string]interface{}{
+				"resources": map[string]any{
 					"subscribe":   false,
 					"listChanged": false,
 				},
-				"tools": map[string]interface{}{
+				"tools": map[string]any{
 					"listChanged": false,
 				},
 			},
@@ -570,7 +570,7 @@ const toolsListJSON = `{
 }`
 
 func handleToolsList(req *RPCRequest) string {
-	var toolsObj map[string]interface{}
+	var toolsObj map[string]any
 	_ = json.Unmarshal([]byte(toolsListJSON), &toolsObj)
 
 	res := RPCResponse{
@@ -589,7 +589,7 @@ func handleToolsCall(req *RPCRequest) string {
 		return makeErrorResponse(req.ID, -32602, "Invalid params")
 	}
 
-	var val interface{}
+	var val any
 	var err error
 
 	switch params.Name {
@@ -643,7 +643,7 @@ func handleToolsCall(req *RPCRequest) string {
 	return makeSuccessResponse(req.ID, params.Name, val)
 }
 
-func listConfigs() (interface{}, error) {
+func listConfigs() (any, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
@@ -669,7 +669,7 @@ func listConfigs() (interface{}, error) {
 	return res, nil
 }
 
-func getConfig(configName string) (interface{}, error) {
+func getConfig(configName string) (any, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
@@ -695,7 +695,7 @@ func getConfig(configName string) (interface{}, error) {
 	return res, nil
 }
 
-func setConfig(configName string, values map[string]string) (interface{}, error) {
+func setConfig(configName string, values map[string]string) (any, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
@@ -710,7 +710,7 @@ func setConfig(configName string, values map[string]string) (interface{}, error)
 	return nil, nil
 }
 
-func listSnapshots(configName string) (interface{}, error) {
+func listSnapshots(configName string) (any, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
@@ -773,7 +773,7 @@ func listSnapshots(configName string) (interface{}, error) {
 	return res, nil
 }
 
-func createSnapshot(configName string, typeStr string, preNumber int, description string, cleanupAlgorithm string, userdata map[string]string) (interface{}, error) {
+func createSnapshot(configName string, typeStr string, preNumber int, description string, cleanupAlgorithm string, userdata map[string]string) (any, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
@@ -807,7 +807,7 @@ func createSnapshot(configName string, typeStr string, preNumber int, descriptio
 	return int(number), nil
 }
 
-func deleteSnapshots(configName string, numbers []int) (interface{}, error) {
+func deleteSnapshots(configName string, numbers []int) (any, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, fmt.Errorf("snapper error")
@@ -826,7 +826,7 @@ func deleteSnapshots(configName string, numbers []int) (interface{}, error) {
 	return nil, nil
 }
 
-func rollback(configName string, number *int, description string, cleanupAlgorithm string) (interface{}, error) {
+func rollback(configName string, number *int, description string, cleanupAlgorithm string) (any, error) {
 	cmdArgs := []string{"--config", configName, "rollback"}
 	if description != "" {
 		cmdArgs = append(cmdArgs, "--description", description)
@@ -869,13 +869,13 @@ func rollback(configName string, number *int, description string, cleanupAlgorit
 	return nil, nil
 }
 
-func makeSuccessResponse(id *json.RawMessage, name string, val interface{}) string {
+func makeSuccessResponse(id *json.RawMessage, name string, val any) string {
 	var toolRes ToolResult
 	toolRes.IsError = false
 
 	if val == nil {
 		toolRes.Content = []TextContent{}
-		toolRes.StructuredContent = map[string]interface{}{"result": nil}
+		toolRes.StructuredContent = map[string]any{"result": nil}
 	} else {
 		switch v := val.(type) {
 		case map[string]string:
@@ -887,7 +887,7 @@ func makeSuccessResponse(id *json.RawMessage, name string, val interface{}) stri
 				},
 			}
 		case []Snapshot:
-			toolRes.StructuredContent = map[string]interface{}{"result": v}
+			toolRes.StructuredContent = map[string]any{"result": v}
 			toolRes.Content = make([]TextContent, len(v))
 			for i, s := range v {
 				toolRes.Content[i] = TextContent{
@@ -896,7 +896,7 @@ func makeSuccessResponse(id *json.RawMessage, name string, val interface{}) stri
 				}
 			}
 		case int:
-			toolRes.StructuredContent = map[string]interface{}{"result": v}
+			toolRes.StructuredContent = map[string]any{"result": v}
 			toolRes.Content = []TextContent{
 				{
 					Type: "text",
@@ -954,12 +954,12 @@ func makeErrorResponse(id *json.RawMessage, code int, message string) string {
 	return string(bytes)
 }
 
-func prettyJSON(v interface{}) string {
+func prettyJSON(v any) string {
 	bytes, _ := json.MarshalIndent(v, "", "  ")
 	return string(bytes)
 }
 
-func compactJSON(v interface{}) string {
+func compactJSON(v any) string {
 	bytes, _ := json.Marshal(v)
 	return string(bytes)
 }

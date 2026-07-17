@@ -48,9 +48,9 @@ func NewMcpServer() (*McpServer, error) {
 	}
 
 	fmt.Println("--- Sending Initialize ---")
-	resp, err := srv.SendRequest("initialize", map[string]interface{}{
+	resp, err := srv.SendRequest("initialize", map[string]any{
 		"protocolVersion": "2025-11-25",
-		"capabilities":    map[string]interface{}{},
+		"capabilities":    map[string]any{},
 		"clientInfo": map[string]string{
 			"name":    "testsuite",
 			"version": "1.0.0",
@@ -62,7 +62,7 @@ func NewMcpServer() (*McpServer, error) {
 	}
 
 	// Verify protocol version
-	result, ok := resp["result"].(map[string]interface{})
+	result, ok := resp["result"].(map[string]any)
 	if !ok {
 		srv.Close()
 		return nil, fmt.Errorf("malformed initialize response result")
@@ -85,8 +85,8 @@ func (s *McpServer) Close() {
 	}
 }
 
-func (s *McpServer) SendRequest(method string, params interface{}) (map[string]interface{}, error) {
-	req := map[string]interface{}{
+func (s *McpServer) SendRequest(method string, params any) (map[string]any, error) {
+	req := map[string]any{
 		"jsonrpc": "2.0",
 		"id":      1,
 		"method":  method,
@@ -112,7 +112,7 @@ func (s *McpServer) SendRequest(method string, params interface{}) (map[string]i
 		return nil, fmt.Errorf("empty response received")
 	}
 
-	var resp map[string]interface{}
+	var resp map[string]any
 	if err := json.Unmarshal([]byte(line), &resp); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}

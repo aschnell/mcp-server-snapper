@@ -49,9 +49,9 @@ func main() {
 	defer srv.Close()
 
 	fmt.Println("--- Create Snapshot ---")
-	resp, err := srv.SendRequest("tools/call", map[string]interface{}{
+	resp, err := srv.SendRequest("tools/call", map[string]any{
 		"name": "create_snapshot",
-		"arguments": map[string]interface{}{
+		"arguments": map[string]any{
 			"config":            "root",
 			"type":              "single",
 			"pre_number":        0,
@@ -65,7 +65,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	result, ok := resp["result"].(map[string]interface{})
+	result, ok := resp["result"].(map[string]any)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Malformed response: result missing\n")
 		os.Exit(1)
@@ -76,7 +76,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	structuredContent, ok := result["structuredContent"].(map[string]interface{})
+	structuredContent, ok := result["structuredContent"].(map[string]any)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Malformed response: structuredContent missing\n")
 		os.Exit(1)
