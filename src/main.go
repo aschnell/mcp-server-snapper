@@ -398,7 +398,7 @@ func listSnapshots(configName string) (any, error) {
 	for _, s := range rawSnapshots {
 		var tPtr *string
 		if s.Timestamp != -1 {
-			tStr := time.Unix(s.Timestamp, 0).Format("2006-01-02 15:04:05")
+			tStr := time.Unix(s.Timestamp, 0).Format(time.DateTime)
 			tPtr = &tStr
 		}
 
