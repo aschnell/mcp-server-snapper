@@ -1,6 +1,8 @@
-// Copyright (c) 2026 Arvin Schnell <aschnell@suse.com>
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file.
+/*
+ *  Copyright (c) 2026 Arvin Schnell <aschnell@suse.com>
+ *  Use of this source code is governed by an MIT-style
+ *  license that can be found in the LICENSE file.
+ */
 
 package main
 
