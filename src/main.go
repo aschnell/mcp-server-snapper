@@ -69,6 +69,15 @@ type RPCErrorResponse struct {
 	Error   RPCError         `json:"error"`
 }
 
+// Standard JSON-RPC 2.0 error codes as specified by the JSON-RPC 2.0 specification.
+const (
+	ErrCodeParseError     = -32700 // Invalid JSON was received by the server. An error occurred on the server while parsing the JSON text.
+	ErrCodeInvalidRequest = -32600 // The JSON sent is not a valid Request object.
+	ErrCodeMethodNotFound = -32601 // The method does not exist / is not available.
+	ErrCodeInvalidParams  = -32602 // Invalid method parameter(s).
+	ErrCodeInternalError  = -32603 // Internal JSON-RPC error.
+)
+
 // ToolCallParams represents the parameters for tools/call.
 type ToolCallParams struct {
 	Name      string          `json:"name"`
@@ -173,7 +182,7 @@ func main() {
 		var req RPCRequest
 		if err := json.Unmarshal([]byte(line), &req); err != nil {
 			logError("Failed to parse request JSON: %v", err)
-			resp := makeErrorResponse(nil, -32700, "Parse error")
+			resp := makeErrorResponse(nil, ErrCodeParseError, "Parse error")
 			fmt.Println(resp)
 			continue
 		}
@@ -201,7 +210,7 @@ func handleRPCRequest(req *RPCRequest) string {
 			return ""
 		}
 		logError("Method not found: %s", req.Method)
-		return makeErrorResponse(req.ID, -32601, "Method not found")
+		return makeErrorResponse(req.ID, ErrCodeMethodNotFound, "Method not found")
 	}
 }
 
@@ -586,7 +595,7 @@ func handleToolsCall(req *RPCRequest) string {
 	var params ToolCallParams
 	if err := json.Unmarshal(req.Params, &params); err != nil {
 		logError("Failed to unmarshal tool call params: %v", err)
-		return makeErrorResponse(req.ID, -32602, "Invalid params")
+		return makeErrorResponse(req.ID, ErrCodeInvalidParams, "Invalid params")
 	}
 
 	var val any
@@ -632,7 +641,7 @@ func handleToolsCall(req *RPCRequest) string {
 		}
 		val, err = rollback(args.Config, args.Number, args.Description, args.CleanupAlgorithm)
 	default:
-		return makeErrorResponse(req.ID, -32601, "Tool not found")
+		return makeErrorResponse(req.ID, ErrCodeMethodNotFound, "Tool not found")
 	}
 
 	if err != nil {
