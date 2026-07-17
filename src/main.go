@@ -838,6 +838,8 @@ func deleteSnapshots(configName string, numbers []int) (any, error) {
 	return nil, nil
 }
 
+const snapperPath = "/usr/bin/snapper"
+
 func rollback(configName string, number *int, description string, cleanupAlgorithm string) (any, error) {
 	cmdArgs := []string{"--config", configName, "rollback"}
 	if description != "" {
@@ -850,9 +852,9 @@ func rollback(configName string, number *int, description string, cleanupAlgorit
 		cmdArgs = append(cmdArgs, fmt.Sprintf("%d", *number))
 	}
 
-	logInfo("%v", append([]string{"/usr/bin/snapper"}, cmdArgs...))
+	logInfo("%v", append([]string{snapperPath}, cmdArgs...))
 
-	cmd := exec.Command("/usr/bin/snapper", cmdArgs...)
+	cmd := exec.Command(snapperPath, cmdArgs...)
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
