@@ -66,7 +66,7 @@ type SetConfigArgs struct {
 }
 
 type SetConfigOutput struct {
-	Result *any `json:"result"`
+	Result string `json:"result"`
 }
 
 type ListSnapshotsArgs struct {
@@ -96,7 +96,7 @@ type DeleteSnapshotsArgs struct {
 }
 
 type DeleteSnapshotsOutput struct {
-	Result *any `json:"result"`
+	Result string `json:"result"`
 }
 
 type RollbackArgs struct {
@@ -108,7 +108,7 @@ type RollbackArgs struct {
 }
 
 type RollbackOutput struct {
-	Result *any `json:"result"`
+	Result string `json:"result"`
 }
 
 func main() {
@@ -132,38 +132,62 @@ func main() {
 
 	// Register tools
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "list_configs",
-		Description: "Return the available snapper configs.\n:returns: Available snapper configs as a dictionary of key-value pairs with the config name as the key and the subvolume path as the value.\n:rtype: dict[str, str]",
+		Name: "list_configs",
+		Description: "Return the available snapper configs.\n:" +
+			"returns: Available snapper configs as a dictionary of key-value pairs with the config name as the key and the subvolume path as the value.\n" +
+			":rtype: dict[str, str]",
 	}, listConfigsHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "get_config",
-		Description: "Return the config values of a snapper config.\n:param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n:returns: Config values of a snapper config as a dictionary of key-value pairs.\n:rtype: dict[str, str]",
+		Name: "get_config",
+		Description: "Return the config values of a snapper config.\n" +
+			":param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n" +
+			":returns: Config values of a snapper config as a dictionary of key-value pairs.\n" +
+			":rtype: dict[str, str]",
 	}, getConfigHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "set_config",
-		Description: "List the configuration values of a snapper config.\n:param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n:param values: List of key-value-pairs to set.",
+		Name: "set_config",
+		Description: "Set or update the configuration values for a specific snapper config.\n" +
+			":param config: Snapper config to use. Often 'root'.\n" +
+			":param values: List of key-value-pairs to set.",
 	}, setConfigHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "list_snapshots",
-		Description: "List file system snapshots using snapper.\n:param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n:returns: Snapshots.\n:rtype: list[Snapshot]",
+		Name: "list_snapshots",
+		Description: "List file system snapshots using snapper.\n" +
+			":param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n" +
+			":returns: Snapshots.\n" +
+			":rtype: list[Snapshot]",
 	}, listSnapshotsHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "create_snapshot",
-		Description: "Create a file system snapshot using snapper.\n:param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n:param type: Type for the snapshot, either 'single', 'pre' or 'post'.\n:param pre_number: Number of the corresponding pre snapshot. Required if type is 'post', otherwise ignored.\n:param description: Description for the snapshot.\n:param cleanup_algorithm: Cleanup algorithm for the snapshot like 'number' or 'timeline'.\n:param userdata: List of key-value pairs.\n:returns: Number of the created snapshot.\n:rtype: int",
+		Name: "create_snapshot",
+		Description: "Create a file system snapshot using snapper.\n" +
+			":param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n" +
+			":param type: Type for the snapshot, either 'single', 'pre' or 'post'.\n" +
+			":param pre_number: Number of the corresponding pre snapshot. Required if type is 'post', otherwise ignored.\n" +
+			":param description: Description for the snapshot.\n" +
+			":param cleanup_algorithm: Cleanup algorithm for the snapshot like 'number' or 'timeline'.\n" +
+			":param userdata: List of key-value pairs.\n:returns: Number of the created snapshot.\n" +
+			":rtype: int",
 	}, createSnapshotHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "delete_snapshots",
-		Description: "Delete one or more file system snapshot using snapper.\n:param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n:param numbers: The snapshot numbers to delete.",
+		Name: "delete_snapshots",
+		Description: "Delete one or more file system snapshot using snapper.\n" +
+			":param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n" +
+			":param numbers: The snapshot numbers to delete.",
 	}, deleteSnapshotsHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "rollback",
-		Description: "Rollback to a snapshot.\n:param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n:param number: Optionally the number of the snapshot to rollback to.\n:param description: Description for the new snapshot.\n:param cleanup_algorithm: Cleanup algorithm for the new snapshot like 'number' or 'timeline'.\n:param userdata: List of key-value pairs.",
+		Name: "rollback",
+		Description: "Rollback to a snapshot.\n" +
+			":param config: Snapper config to use. Often 'root'. Use the list_configs tool to query all values.\n" +
+			":param number: Optionally the number of the snapshot to rollback to.\n" +
+			":param description: Description for the new snapshot.\n" +
+			":param cleanup_algorithm: Cleanup algorithm for the new snapshot like 'number' or 'timeline'.\n" +
+			":param userdata: List of key-value pairs.",
 	}, rollbackHandler)
 
 	// Run the server over StdioTransport
@@ -220,12 +244,12 @@ func setConfigHandler(ctx context.Context, req *mcp.CallToolRequest, args SetCon
 	logDebug("Received tool call: set_config with arguments: %s", compactJSON(args))
 	_, err := setConfig(args.Config, args.Values)
 	if err != nil {
-		return nil, SetConfigOutput{}, err
+		return nil, SetConfigOutput{"success"}, err
 	}
 	res := &mcp.CallToolResult{
 		Content: []mcp.Content{},
 	}
-	return res, SetConfigOutput{Result: nil}, nil
+	return res, SetConfigOutput{Result: "success"}, nil
 }
 
 func listSnapshotsHandler(ctx context.Context, req *mcp.CallToolRequest, args ListSnapshotsArgs) (*mcp.CallToolResult, ListSnapshotsOutput, error) {
@@ -279,7 +303,7 @@ func deleteSnapshotsHandler(ctx context.Context, req *mcp.CallToolRequest, args 
 	res := &mcp.CallToolResult{
 		Content: []mcp.Content{},
 	}
-	return res, DeleteSnapshotsOutput{Result: nil}, nil
+	return res, DeleteSnapshotsOutput{Result: "success"}, nil
 }
 
 func rollbackHandler(ctx context.Context, req *mcp.CallToolRequest, args RollbackArgs) (*mcp.CallToolResult, RollbackOutput, error) {
@@ -291,7 +315,7 @@ func rollbackHandler(ctx context.Context, req *mcp.CallToolRequest, args Rollbac
 	res := &mcp.CallToolResult{
 		Content: []mcp.Content{},
 	}
-	return res, RollbackOutput{Result: nil}, nil
+	return res, RollbackOutput{Result: "success"}, nil
 }
 
 // Core snapper business logic
