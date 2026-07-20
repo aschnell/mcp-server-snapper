@@ -1,34 +1,3 @@
-/*
-Test Suite: Snapshot Management
-Test Case: List Snapshots and Verify Properties
-
-Description:
-    This integration test validates the 'list_snapshots' tool of the snapper MCP server.
-    It retrieves the list of snapshots for the 'root' configuration and asserts that
-    the default initial snapshot (snapshot 0, description 'current') is present and
-    conforms to the expected structure.
-
-Prerequisites:
-    - A standard snapper configuration named 'root' targeting '/'.
-    - At least one snapshot (default snapshot 0 with description 'current').
-
-Test Steps:
-    1. Initialize the MCP server connection.
-    2. Dispatch a 'list_snapshots' tool call specifying 'config': 'root'.
-    3. Verify that the response contains a 'result' without 'isError'.
-    4. Assert that 'structuredContent' is non-empty.
-    5. Inspect the first snapshot record (index 0) and assert:
-       - 'type' is 'single'
-       - 'number' is 0
-       - 'pre_number' is None
-       - 'date' is None
-       - 'description' is 'current'
-       - 'cleanup_algorithm' is empty
-
-Expected Result:
-    A successful list of snapshots where the first entry accurately represents the default snapshot 0.
-*/
-
 package main
 
 import (
