@@ -10,9 +10,7 @@ sed "s/@VERSION@/${VERSION}/g" "$(dirname "$0")/mcp-server-snapper.spec.in" > "$
 tar -cJvf mcp-server-snapper-${VERSION}.tar.xz --exclude='*~'	\
     --transform "s|^|mcp-server-snapper-${VERSION}/|"		\
     LICENSE README.md VERSION src/main.go go.mod go.sum build.sh \
-    testsuite/list-configs/main.go testsuite/get-config/main.go testsuite/tools/main.go \
-    testsuite/list-snapshots/main.go testsuite/create-snapshot-1/main.go testsuite/create-snapshot-2/main.go \
-    testsuite/rollback/main.go testsuite/mcpserver/mcpserver.go testsuite/README
+    testsuite/README testsuite/*/*.go testsuite/*/README
 
 # Package vendor tarball
 tar -czf vendor.tar.gz --exclude='*~' vendor
