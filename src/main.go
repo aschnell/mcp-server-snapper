@@ -23,19 +23,10 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// Snapshot represents a file system snapshot structure.
-type Snapshot struct {
-	Type             string            `json:"type"`
-	Number           int               `json:"number"`
-	PreNumber        *int              `json:"pre_number"`
-	Date             *string           `json:"date"`
-	Description      string            `json:"description"`
-	CleanupAlgorithm string            `json:"cleanup_algorithm"`
-	Userdata         map[string]string `json:"userdata"`
-}
-
 // Version is the server version dynamically set at build time.
 var Version = "0.3.0"
+
+const snapperPath = "/usr/bin/snapper"
 
 // Global logger file setup
 var logFile *os.File
@@ -50,6 +41,16 @@ func logError(format string, v ...any) {
 
 func logDebug(format string, v ...any) {
 	log.Printf("DEBUG:root:"+format, v...)
+}
+
+type Snapshot struct {
+	Type             string            `json:"type"`
+	Number           int               `json:"number"`
+	PreNumber        *int              `json:"pre_number"`
+	Date             *string           `json:"date"`
+	Description      string            `json:"description"`
+	CleanupAlgorithm string            `json:"cleanup_algorithm"`
+	Userdata         map[string]string `json:"userdata"`
 }
 
 // Structs for MCP Tools
@@ -113,7 +114,8 @@ type RollbackOutput struct {
 
 func main() {
 	log.SetOutput(os.Stderr)
-	logInfo("Server started")
+
+	logInfo("MCP Server Snapper " + Version + " started")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Run the snapper MCP server.\n")
@@ -133,8 +135,8 @@ func main() {
 	// Register tools
 	mcp.AddTool(server, &mcp.Tool{
 		Name: "list_configs",
-		Description: "Return the available snapper configs.\n:" +
-			"returns: Available snapper configs as a dictionary of key-value pairs with the config name as the key and the subvolume path as the value.\n" +
+		Description: "Return the available snapper configs.\n" +
+			":returns: Available snapper configs as a dictionary of key-value pairs with the config name as the key and the subvolume path as the value.\n" +
 			":rtype: dict[str, str]",
 	}, listConfigsHandler)
 
@@ -169,7 +171,8 @@ func main() {
 			":param pre_number: Number of the corresponding pre snapshot. Required if type is 'post', otherwise ignored.\n" +
 			":param description: Description for the snapshot.\n" +
 			":param cleanup_algorithm: Cleanup algorithm for the snapshot like 'number' or 'timeline'.\n" +
-			":param userdata: List of key-value pairs.\n:returns: Number of the created snapshot.\n" +
+			":param userdata: List of key-value pairs.\n" +
+			":returns: Number of the created snapshot.\n" +
 			":rtype: int",
 	}, createSnapshotHandler)
 
@@ -502,8 +505,6 @@ func deleteSnapshots(configName string, numbers []int) (any, error) {
 	}
 	return nil, nil
 }
-
-const snapperPath = "/usr/bin/snapper"
 
 func rollback(configName string, number *int, description string, cleanupAlgorithm string) (any, error) {
 	cmdArgs := []string{"--config", configName, "rollback"}
