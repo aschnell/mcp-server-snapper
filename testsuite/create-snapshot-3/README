@@ -1,0 +1,27 @@
+Test Suite: Snapshot Management
+Test Case: Error Handling on Non-Existent Snapper Config
+
+Description:
+    This integration test verifies that the MCP server robustly handles errors
+    when trying to interact with a non-existent snapper configuration. It sends
+    a 'tools/call' request to the 'create_snapshot' tool with a non-existent config name
+    ('non_existent_config_xyz') and verifies that the server correctly propagates
+    a descriptive error response instead of generic messages.
+
+Prerequisites:
+    - None (the configuration should not exist).
+
+Test Steps:
+    1. Initialize the MCP server connection.
+    2. Dispatch a 'create_snapshot' tool call with arguments containing:
+       - config: 'non_existent_config_xyz'
+       - type: 'single'
+       - other standard parameters.
+    3. Assert the server's response contains a valid JSON-RPC 'result'.
+    4. Validate that 'isError' is present and evaluated to True in the result.
+    5. Validate that 'content' includes a descriptive error message stating that the
+       D-Bus call failed for the specific non-existent configuration.
+
+Expected Result:
+    The response succeeds at the RPC level but includes an 'isError' flag set to True and
+    a descriptive text: `snapper create single snapshot "non_existent_config_xyz" D-Bus call failed...`.
