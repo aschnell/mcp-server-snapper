@@ -22,7 +22,16 @@ MCPSERVER=/usr/bin/mcp-server-snapper ./list-configs/list-configs
 Or run all tests in the test suite using a loop:
 
 ```bash
-for test in list-configs/list-configs get-config/get-config tools/tools list-snapshots/list-snapshots create-snapshot-1/create-snapshot-1 create-snapshot-2/create-snapshot-2 rollback/rollback ; do
+for test in \
+    create-snapshot-1/create-snapshot-1 \
+    create-snapshot-2/create-snapshot-2 \
+    create-snapshot-3/create-snapshot-3 \
+    get-config/get-config \
+    list-configs/list-configs \
+    list-snapshots/list-snapshots \
+    rollback/rollback \
+    tools/tools \
+; do
     echo "Running $test..."
     MCPSERVER=/usr/bin/mcp-server-snapper "./$test" || { echo "Test $test failed!" ; exit 1; }
 done
