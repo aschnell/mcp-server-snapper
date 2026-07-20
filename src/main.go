@@ -323,10 +323,18 @@ func rollbackHandler(ctx context.Context, req *mcp.CallToolRequest, args Rollbac
 
 // Core snapper business logic
 
-func listConfigs() (any, error) {
+func connectSystemBus() (*dbus.Conn, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, fmt.Errorf("failed to connect to D-Bus system bus: %w", err)
+	}
+	return conn, nil
+}
+
+func listConfigs() (any, error) {
+	conn, err := connectSystemBus()
+	if err != nil {
+		return nil, err
 	}
 	defer conn.Close()
 
@@ -338,7 +346,7 @@ func listConfigs() (any, error) {
 	}
 	err = obj.Call("org.opensuse.Snapper.ListConfigs", 0).Store(&configs)
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, fmt.Errorf("snapper ListConfigs D-Bus call failed: %w", err)
 	}
 
 	res := make(map[string]string)
@@ -350,9 +358,9 @@ func listConfigs() (any, error) {
 }
 
 func getConfig(configName string) (any, error) {
-	conn, err := dbus.ConnectSystemBus()
+	conn, err := connectSystemBus()
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, err
 	}
 	defer conn.Close()
 
@@ -364,7 +372,7 @@ func getConfig(configName string) (any, error) {
 	}
 	err = obj.Call("org.opensuse.Snapper.GetConfig", 0, configName).Store(&cfg)
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, fmt.Errorf("snapper GetConfig %q D-Bus call failed: %w", configName, err)
 	}
 
 	res := make(map[string]string)
@@ -376,24 +384,24 @@ func getConfig(configName string) (any, error) {
 }
 
 func setConfig(configName string, values map[string]string) (any, error) {
-	conn, err := dbus.ConnectSystemBus()
+	conn, err := connectSystemBus()
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, err
 	}
 	defer conn.Close()
 
 	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	err = obj.Call("org.opensuse.Snapper.SetConfig", 0, configName, values).Err
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, fmt.Errorf("snapper SetConfig %q D-Bus call failed: %w", configName, err)
 	}
 	return nil, nil
 }
 
 func listSnapshots(configName string) (any, error) {
-	conn, err := dbus.ConnectSystemBus()
+	conn, err := connectSystemBus()
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, err
 	}
 	defer conn.Close()
 
@@ -410,7 +418,7 @@ func listSnapshots(configName string) (any, error) {
 	}
 	err = obj.Call("org.opensuse.Snapper.ListSnapshots", 0, configName).Store(&rawSnapshots)
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, fmt.Errorf("snapper ListSnapshots %q D-Bus call failed: %w", configName, err)
 	}
 
 	res := make([]Snapshot, 0, len(rawSnapshots))
@@ -454,9 +462,9 @@ func listSnapshots(configName string) (any, error) {
 }
 
 func createSnapshot(configName string, typeStr string, preNumber int, description string, cleanupAlgorithm string, userdata map[string]string) (any, error) {
-	conn, err := dbus.ConnectSystemBus()
+	conn, err := connectSystemBus()
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, err
 	}
 	defer conn.Close()
 
@@ -480,7 +488,7 @@ func createSnapshot(configName string, typeStr string, preNumber int, descriptio
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, fmt.Errorf("snapper create %s snapshot %q D-Bus call failed: %w", typeStr, configName, err)
 	}
 
 	logInfo("snapper number of created snapshot: %d", number)
@@ -488,9 +496,9 @@ func createSnapshot(configName string, typeStr string, preNumber int, descriptio
 }
 
 func deleteSnapshots(configName string, numbers []int) (any, error) {
-	conn, err := dbus.ConnectSystemBus()
+	conn, err := connectSystemBus()
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, err
 	}
 	defer conn.Close()
 
@@ -501,7 +509,7 @@ func deleteSnapshots(configName string, numbers []int) (any, error) {
 	}
 	err = obj.Call("org.opensuse.Snapper.DeleteSnapshots", 0, configName, dbusNums).Err
 	if err != nil {
-		return nil, fmt.Errorf("snapper error")
+		return nil, fmt.Errorf("snapper DeleteSnapshots %q D-Bus call failed: %w", configName, err)
 	}
 	return nil, nil
 }
@@ -543,7 +551,10 @@ func rollback(configName string, number *int, description string, cleanupAlgorit
 			exitCode = exitErr.ExitCode()
 		}
 		logError("Snapper error: %d", exitCode)
-		return nil, fmt.Errorf("snapper error")
+		if stderr != "" {
+			return nil, fmt.Errorf("snapper rollback %q command failed (exit code %d): %s: %w", configName, exitCode, stderr, err)
+		}
+		return nil, fmt.Errorf("snapper rollback %q command failed (exit code %d): %w", configName, exitCode, err)
 	}
 
 	return nil, nil
