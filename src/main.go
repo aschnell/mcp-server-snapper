@@ -40,16 +40,6 @@ var Version = "0.3.0"
 // Global logger file setup
 var logFile *os.File
 
-func initLogger() {
-	var err error
-	logFile, err = os.OpenFile("mcp-server-snapper.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		log.SetOutput(os.Stderr)
-	} else {
-		log.SetOutput(logFile)
-	}
-}
-
 func logInfo(format string, v ...any) {
 	log.Printf("INFO:root:"+format, v...)
 }
@@ -122,7 +112,7 @@ type RollbackOutput struct {
 }
 
 func main() {
-	initLogger()
+	log.SetOutput(os.Stderr)
 	logInfo("Server started")
 
 	flag.Usage = func() {
