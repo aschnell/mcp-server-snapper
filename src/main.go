@@ -336,6 +336,7 @@ func listConfigs() (map[string]string, error) {
 	for _, c := range configs {
 		res[c.Name] = c.Subvolume
 	}
+
 	logInfo("list of snapper configs: %s", compactJSON(res))
 	return res, nil
 }
@@ -357,10 +358,8 @@ func getConfig(configName string) (map[string]string, error) {
 		return nil, fmt.Errorf("snapper GetConfig %q D-Bus call failed: %w", configName, err)
 	}
 
-	res := make(map[string]string)
-	for k, v := range cfg.Config {
-		res[k] = v
-	}
+	res := cfg.Config
+
 	logInfo("snapper config: %s", compactJSON(res))
 	return res, nil
 }
@@ -485,6 +484,7 @@ func deleteSnapshots(configName string, numbers []uint32) error {
 	if err != nil {
 		return fmt.Errorf("snapper DeleteSnapshots %q D-Bus call failed: %w", configName, err)
 	}
+
 	return nil
 }
 
