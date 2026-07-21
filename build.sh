@@ -9,13 +9,8 @@ go build -mod=vendor -buildmode=pie -ldflags "-X main.Version=${VERSION}" -o src
 
 # Compile individual test programs
 echo "Building testsuite programs..."
-go build -mod=vendor -buildmode=pie -o testsuite/create-snapshot-1/create-snapshot-1 testsuite/create-snapshot-1/main.go
-go build -mod=vendor -buildmode=pie -o testsuite/create-snapshot-2/create-snapshot-2 testsuite/create-snapshot-2/main.go
-go build -mod=vendor -buildmode=pie -o testsuite/create-snapshot-3/create-snapshot-3 testsuite/create-snapshot-3/main.go
-go build -mod=vendor -buildmode=pie -o testsuite/get-config/get-config testsuite/get-config/main.go
-go build -mod=vendor -buildmode=pie -o testsuite/list-configs/list-configs testsuite/list-configs/main.go
-go build -mod=vendor -buildmode=pie -o testsuite/list-snapshots/list-snapshots testsuite/list-snapshots/main.go
-go build -mod=vendor -buildmode=pie -o testsuite/rollback/rollback testsuite/rollback/main.go
-go build -mod=vendor -buildmode=pie -o testsuite/tools/tools testsuite/tools/main.go
+for prog in create-snapshot-1 create-snapshot-2 create-snapshot-3 get-config list-configs list-snapshots rollback tools; do
+    go build -mod=vendor -buildmode=pie -o testsuite/$prog/$prog testsuite/$prog/main.go
+done
 
 echo "All builds completed successfully!"
