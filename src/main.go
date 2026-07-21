@@ -202,13 +202,9 @@ func main() {
 
 func listConfigsHandler(ctx context.Context, req *mcp.CallToolRequest, args ListConfigsArgs) (*mcp.CallToolResult, map[string]string, error) {
 	logDebug("Received tool call: list_configs")
-	val, err := listConfigs()
+	resMap, err := listConfigs()
 	if err != nil {
 		return nil, nil, err
-	}
-	resMap, ok := val.(map[string]string)
-	if !ok {
-		return nil, nil, fmt.Errorf("unexpected return type from listConfigs")
 	}
 	res := &mcp.CallToolResult{
 		Content: []mcp.Content{
@@ -222,13 +218,9 @@ func listConfigsHandler(ctx context.Context, req *mcp.CallToolRequest, args List
 
 func getConfigHandler(ctx context.Context, req *mcp.CallToolRequest, args GetConfigArgs) (*mcp.CallToolResult, map[string]string, error) {
 	logDebug("Received tool call: get_config with arguments: %s", compactJSON(args))
-	val, err := getConfig(args.Config)
+	resMap, err := getConfig(args.Config)
 	if err != nil {
 		return nil, nil, err
-	}
-	resMap, ok := val.(map[string]string)
-	if !ok {
-		return nil, nil, fmt.Errorf("unexpected return type from getConfig")
 	}
 	res := &mcp.CallToolResult{
 		Content: []mcp.Content{
@@ -242,7 +234,7 @@ func getConfigHandler(ctx context.Context, req *mcp.CallToolRequest, args GetCon
 
 func setConfigHandler(ctx context.Context, req *mcp.CallToolRequest, args SetConfigArgs) (*mcp.CallToolResult, SetConfigOutput, error) {
 	logDebug("Received tool call: set_config with arguments: %s", compactJSON(args))
-	_, err := setConfig(args.Config, args.Values)
+	err := setConfig(args.Config, args.Values)
 	if err != nil {
 		return nil, SetConfigOutput{"success"}, err
 	}
@@ -254,13 +246,9 @@ func setConfigHandler(ctx context.Context, req *mcp.CallToolRequest, args SetCon
 
 func listSnapshotsHandler(ctx context.Context, req *mcp.CallToolRequest, args ListSnapshotsArgs) (*mcp.CallToolResult, ListSnapshotsOutput, error) {
 	logDebug("Received tool call: list_snapshots with arguments: %s", compactJSON(args))
-	val, err := listSnapshots(args.Config)
+	snapshots, err := listSnapshots(args.Config)
 	if err != nil {
 		return nil, ListSnapshotsOutput{}, err
-	}
-	snapshots, ok := val.([]Snapshot)
-	if !ok {
-		return nil, ListSnapshotsOutput{}, fmt.Errorf("unexpected return type from listSnapshots")
 	}
 	content := make([]mcp.Content, len(snapshots))
 	for i, s := range snapshots {
@@ -276,13 +264,9 @@ func listSnapshotsHandler(ctx context.Context, req *mcp.CallToolRequest, args Li
 
 func createSnapshotHandler(ctx context.Context, req *mcp.CallToolRequest, args CreateSnapshotArgs) (*mcp.CallToolResult, CreateSnapshotOutput, error) {
 	logDebug("Received tool call: create_snapshot with arguments: %s", compactJSON(args))
-	val, err := createSnapshot(args.Config, args.Type, args.PreNumber, args.Description, args.CleanupAlgorithm, args.Userdata)
+	num, err := createSnapshot(args.Config, args.Type, args.PreNumber, args.Description, args.CleanupAlgorithm, args.Userdata)
 	if err != nil {
 		return nil, CreateSnapshotOutput{}, err
-	}
-	num, ok := val.(int)
-	if !ok {
-		return nil, CreateSnapshotOutput{}, fmt.Errorf("unexpected return type from createSnapshot")
 	}
 	res := &mcp.CallToolResult{
 		Content: []mcp.Content{
@@ -296,7 +280,7 @@ func createSnapshotHandler(ctx context.Context, req *mcp.CallToolRequest, args C
 
 func deleteSnapshotsHandler(ctx context.Context, req *mcp.CallToolRequest, args DeleteSnapshotsArgs) (*mcp.CallToolResult, DeleteSnapshotsOutput, error) {
 	logDebug("Received tool call: delete_snapshots with arguments: %s", compactJSON(args))
-	_, err := deleteSnapshots(args.Config, args.Numbers)
+	err := deleteSnapshots(args.Config, args.Numbers)
 	if err != nil {
 		return nil, DeleteSnapshotsOutput{}, err
 	}
@@ -308,7 +292,7 @@ func deleteSnapshotsHandler(ctx context.Context, req *mcp.CallToolRequest, args 
 
 func rollbackHandler(ctx context.Context, req *mcp.CallToolRequest, args RollbackArgs) (*mcp.CallToolResult, RollbackOutput, error) {
 	logDebug("Received tool call: rollback with arguments: %s", compactJSON(args))
-	_, err := rollback(args.Config, args.Number, args.Description, args.CleanupAlgorithm)
+	err := rollback(args.Config, args.Number, args.Description, args.CleanupAlgorithm)
 	if err != nil {
 		return nil, RollbackOutput{}, err
 	}
@@ -331,7 +315,7 @@ func connectSystemBus() (*dbus.Conn, dbus.BusObject, error) {
 	return conn, obj, nil
 }
 
-func listConfigs() (any, error) {
+func listConfigs() (map[string]string, error) {
 	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return nil, err
@@ -356,7 +340,7 @@ func listConfigs() (any, error) {
 	return res, nil
 }
 
-func getConfig(configName string) (any, error) {
+func getConfig(configName string) (map[string]string, error) {
 	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return nil, err
@@ -381,21 +365,21 @@ func getConfig(configName string) (any, error) {
 	return res, nil
 }
 
-func setConfig(configName string, values map[string]string) (any, error) {
+func setConfig(configName string, values map[string]string) error {
 	conn, obj, err := connectSystemBus()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer conn.Close()
 
 	err = obj.Call("org.opensuse.Snapper.SetConfig", 0, configName, values).Err
 	if err != nil {
-		return nil, fmt.Errorf("snapper SetConfig %q D-Bus call failed: %w", configName, err)
+		return fmt.Errorf("snapper SetConfig %q D-Bus call failed: %w", configName, err)
 	}
-	return nil, nil
+	return nil
 }
 
-func listSnapshots(configName string) (any, error) {
+func listSnapshots(configName string) ([]Snapshot, error) {
 	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return nil, err
@@ -457,10 +441,10 @@ func listSnapshots(configName string) (any, error) {
 	return res, nil
 }
 
-func createSnapshot(configName string, typeStr string, preNumber int, description string, cleanupAlgorithm string, userdata map[string]string) (any, error) {
+func createSnapshot(configName string, typeStr string, preNumber int, description string, cleanupAlgorithm string, userdata map[string]string) (int, error) {
 	conn, obj, err := connectSystemBus()
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	defer conn.Close()
 
@@ -479,21 +463,21 @@ func createSnapshot(configName string, typeStr string, preNumber int, descriptio
 		err = obj.Call("org.opensuse.Snapper.CreatePostSnapshot", 0, configName, uint32(preNumber), description, cleanupAlgorithm, userdata).Store(&number)
 	default:
 		logError("Invalid snapshot type: %s", typeStr)
-		return nil, fmt.Errorf("invalid snapshot type")
+		return 0, fmt.Errorf("invalid snapshot type")
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("snapper create %s snapshot %q D-Bus call failed: %w", typeStr, configName, err)
+		return 0, fmt.Errorf("snapper create %s snapshot %q D-Bus call failed: %w", typeStr, configName, err)
 	}
 
 	logInfo("snapper number of created snapshot: %d", number)
 	return int(number), nil
 }
 
-func deleteSnapshots(configName string, numbers []int) (any, error) {
+func deleteSnapshots(configName string, numbers []int) error {
 	conn, obj, err := connectSystemBus()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer conn.Close()
 
@@ -503,12 +487,12 @@ func deleteSnapshots(configName string, numbers []int) (any, error) {
 	}
 	err = obj.Call("org.opensuse.Snapper.DeleteSnapshots", 0, configName, dbusNums).Err
 	if err != nil {
-		return nil, fmt.Errorf("snapper DeleteSnapshots %q D-Bus call failed: %w", configName, err)
+		return fmt.Errorf("snapper DeleteSnapshots %q D-Bus call failed: %w", configName, err)
 	}
-	return nil, nil
+	return nil
 }
 
-func rollback(configName string, number *int, description string, cleanupAlgorithm string) (any, error) {
+func rollback(configName string, number *int, description string, cleanupAlgorithm string) error {
 	cmdArgs := []string{"--config", configName, "rollback"}
 	if description != "" {
 		cmdArgs = append(cmdArgs, "--description", description)
@@ -546,12 +530,12 @@ func rollback(configName string, number *int, description string, cleanupAlgorit
 		}
 		logError("Snapper error: %d", exitCode)
 		if stderr != "" {
-			return nil, fmt.Errorf("snapper rollback %q command failed (exit code %d): %s: %w", configName, exitCode, stderr, err)
+			return fmt.Errorf("snapper rollback %q command failed (exit code %d): %s: %w", configName, exitCode, stderr, err)
 		}
-		return nil, fmt.Errorf("snapper rollback %q command failed (exit code %d): %w", configName, exitCode, err)
+		return fmt.Errorf("snapper rollback %q command failed (exit code %d): %w", configName, exitCode, err)
 	}
 
-	return nil, nil
+	return nil
 }
 
 // Helpers
