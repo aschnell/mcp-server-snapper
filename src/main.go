@@ -45,8 +45,8 @@ func logDebug(format string, v ...any) {
 
 type Snapshot struct {
 	Type             string            `json:"type"`
-	Number           int               `json:"number"`
-	PreNumber        *int              `json:"pre_number"`
+	Number           uint32            `json:"number"`
+	PreNumber        *uint32           `json:"pre_number"`
 	Date             *string           `json:"date"`
 	Description      string            `json:"description"`
 	CleanupAlgorithm string            `json:"cleanup_algorithm"`
@@ -81,19 +81,19 @@ type ListSnapshotsOutput struct {
 type CreateSnapshotArgs struct {
 	Config           string            `json:"config" jsonschema:"Snapper config to use. Often 'root'. Use the list_configs tool to query all values."`
 	Type             string            `json:"type" jsonschema:"Type for the snapshot, either 'single', 'pre' or 'post'."`
-	PreNumber        int               `json:"pre_number" jsonschema:"Number of the corresponding pre snapshot. Required if type is 'post', otherwise ignored."`
+	PreNumber        uint32            `json:"pre_number" jsonschema:"Number of the corresponding pre snapshot. Required if type is 'post', otherwise ignored."`
 	Description      string            `json:"description" jsonschema:"Description for the snapshot."`
 	CleanupAlgorithm string            `json:"cleanup_algorithm" jsonschema:"Cleanup algorithm for the snapshot like 'number' or 'timeline'."`
 	Userdata         map[string]string `json:"userdata" jsonschema:"List of key-value pairs."`
 }
 
 type CreateSnapshotOutput struct {
-	Result int `json:"result" jsonschema:"Number of the created snapshot."`
+	Result uint32 `json:"result" jsonschema:"Number of the created snapshot."`
 }
 
 type DeleteSnapshotsArgs struct {
-	Config  string `json:"config" jsonschema:"Snapper config to use. Often 'root'. Use the list_configs tool to query all values."`
-	Numbers []int  `json:"numbers" jsonschema:"The snapshot numbers to delete."`
+	Config  string   `json:"config" jsonschema:"Snapper config to use. Often 'root'. Use the list_configs tool to query all values."`
+	Numbers []uint32 `json:"numbers" jsonschema:"The snapshot numbers to delete."`
 }
 
 type DeleteSnapshotsOutput struct {
@@ -102,7 +102,7 @@ type DeleteSnapshotsOutput struct {
 
 type RollbackArgs struct {
 	Config           string            `json:"config" jsonschema:"Snapper config to use. Often 'root'. Use the list_configs tool to query all values."`
-	Number           *int              `json:"number" jsonschema:"Optionally the number of the snapshot to rollback to."`
+	Number           *uint32           `json:"number" jsonschema:"Optionally the number of the snapshot to rollback to."`
 	Description      string            `json:"description" jsonschema:"Description for the new snapshot."`
 	CleanupAlgorithm string            `json:"cleanup_algorithm" jsonschema:"Cleanup algorithm for the new snapshot like 'number' or 'timeline'."`
 	Userdata         map[string]string `json:"userdata" jsonschema:"List of key-value pairs."`
@@ -410,14 +410,14 @@ func listSnapshots(configName string) ([]Snapshot, error) {
 		}
 
 		var typeStr string
-		var preNumPtr *int
+		var preNumPtr *uint32
 		if s.Type == 0 {
 			typeStr = "single"
 		} else if s.Type == 1 {
 			typeStr = "pre"
 		} else if s.Type == 2 {
 			typeStr = "post"
-			val := int(s.PreNumber)
+			val := s.PreNumber
 			preNumPtr = &val
 		}
 
@@ -428,7 +428,7 @@ func listSnapshots(configName string) ([]Snapshot, error) {
 
 		res = append(res, Snapshot{
 			Type:             typeStr,
-			Number:           int(s.Number),
+			Number:           s.Number,
 			PreNumber:        preNumPtr,
 			Date:             tPtr,
 			Description:      s.Description,
@@ -441,7 +441,7 @@ func listSnapshots(configName string) ([]Snapshot, error) {
 	return res, nil
 }
 
-func createSnapshot(configName string, typeStr string, preNumber int, description string, cleanupAlgorithm string, userdata map[string]string) (int, error) {
+func createSnapshot(configName string, typeStr string, preNumber uint32, description string, cleanupAlgorithm string, userdata map[string]string) (uint32, error) {
 	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return 0, err
@@ -460,7 +460,7 @@ func createSnapshot(configName string, typeStr string, preNumber int, descriptio
 	case "pre":
 		err = obj.Call("org.opensuse.Snapper.CreatePreSnapshot", 0, configName, description, cleanupAlgorithm, userdata).Store(&number)
 	case "post":
-		err = obj.Call("org.opensuse.Snapper.CreatePostSnapshot", 0, configName, uint32(preNumber), description, cleanupAlgorithm, userdata).Store(&number)
+		err = obj.Call("org.opensuse.Snapper.CreatePostSnapshot", 0, configName, preNumber, description, cleanupAlgorithm, userdata).Store(&number)
 	default:
 		logError("Invalid snapshot type: %s", typeStr)
 		return 0, fmt.Errorf("invalid snapshot type")
@@ -471,28 +471,24 @@ func createSnapshot(configName string, typeStr string, preNumber int, descriptio
 	}
 
 	logInfo("snapper number of created snapshot: %d", number)
-	return int(number), nil
+	return number, nil
 }
 
-func deleteSnapshots(configName string, numbers []int) error {
+func deleteSnapshots(configName string, numbers []uint32) error {
 	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
 
-	dbusNums := make([]uint32, len(numbers))
-	for i, n := range numbers {
-		dbusNums[i] = uint32(n)
-	}
-	err = obj.Call("org.opensuse.Snapper.DeleteSnapshots", 0, configName, dbusNums).Err
+	err = obj.Call("org.opensuse.Snapper.DeleteSnapshots", 0, configName, numbers).Err
 	if err != nil {
 		return fmt.Errorf("snapper DeleteSnapshots %q D-Bus call failed: %w", configName, err)
 	}
 	return nil
 }
 
-func rollback(configName string, number *int, description string, cleanupAlgorithm string) error {
+func rollback(configName string, number *uint32, description string, cleanupAlgorithm string) error {
 	cmdArgs := []string{"--config", configName, "rollback"}
 	if description != "" {
 		cmdArgs = append(cmdArgs, "--description", description)
