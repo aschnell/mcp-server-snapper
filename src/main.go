@@ -124,13 +124,10 @@ func main() {
 	flag.Parse()
 
 	// Initialize the MCP server
-	server := mcp.NewServer(
-		&mcp.Implementation{
-			Name:    "SnapperServer",
-			Version: Version,
-		},
-		nil,
-	)
+	server := mcp.NewServer(&mcp.Implementation{
+		Name:    "SnapperServer",
+		Version: Version,
+	}, nil)
 
 	// Register tools
 	mcp.AddTool(server, &mcp.Tool{
