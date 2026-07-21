@@ -420,11 +420,6 @@ func listSnapshots(configName string) ([]Snapshot, error) {
 			preNumPtr = &val
 		}
 
-		userdata := s.Userdata
-		if userdata == nil {
-			userdata = make(map[string]string)
-		}
-
 		res = append(res, Snapshot{
 			Type:             typeStr,
 			Number:           s.Number,
@@ -432,7 +427,7 @@ func listSnapshots(configName string) ([]Snapshot, error) {
 			Date:             tPtr,
 			Description:      s.Description,
 			CleanupAlgorithm: s.CleanupAlgorithm,
-			Userdata:         userdata,
+			Userdata:         s.Userdata,
 		})
 	}
 
@@ -448,10 +443,6 @@ func createSnapshot(configName string, typeStr string, preNumber uint32, descrip
 	defer conn.Close()
 
 	var number uint32
-
-	if userdata == nil {
-		userdata = make(map[string]string)
-	}
 
 	switch typeStr {
 	case "single":
