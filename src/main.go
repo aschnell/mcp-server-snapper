@@ -320,22 +320,24 @@ func rollbackHandler(ctx context.Context, req *mcp.CallToolRequest, args Rollbac
 
 // Core snapper business logic
 
-func connectSystemBus() (*dbus.Conn, error) {
+func connectSystemBus() (*dbus.Conn, dbus.BusObject, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to D-Bus system bus: %w", err)
+		return nil, nil, fmt.Errorf("failed to connect to D-Bus system bus: %w", err)
 	}
-	return conn, nil
+
+	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
+
+	return conn, obj, nil
 }
 
 func listConfigs() (any, error) {
-	conn, err := connectSystemBus()
+	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
 
-	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	var configs []struct {
 		Name      string
 		Subvolume string
@@ -355,13 +357,12 @@ func listConfigs() (any, error) {
 }
 
 func getConfig(configName string) (any, error) {
-	conn, err := connectSystemBus()
+	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
 
-	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	var cfg struct {
 		Name      string
 		Subvolume string
@@ -381,13 +382,12 @@ func getConfig(configName string) (any, error) {
 }
 
 func setConfig(configName string, values map[string]string) (any, error) {
-	conn, err := connectSystemBus()
+	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
 
-	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	err = obj.Call("org.opensuse.Snapper.SetConfig", 0, configName, values).Err
 	if err != nil {
 		return nil, fmt.Errorf("snapper SetConfig %q D-Bus call failed: %w", configName, err)
@@ -396,13 +396,12 @@ func setConfig(configName string, values map[string]string) (any, error) {
 }
 
 func listSnapshots(configName string) (any, error) {
-	conn, err := connectSystemBus()
+	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
 
-	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	var rawSnapshots []struct {
 		Number           uint32
 		Type             uint16
@@ -459,13 +458,12 @@ func listSnapshots(configName string) (any, error) {
 }
 
 func createSnapshot(configName string, typeStr string, preNumber int, description string, cleanupAlgorithm string, userdata map[string]string) (any, error) {
-	conn, err := connectSystemBus()
+	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
 
-	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	var number uint32
 
 	if userdata == nil {
@@ -493,13 +491,12 @@ func createSnapshot(configName string, typeStr string, preNumber int, descriptio
 }
 
 func deleteSnapshots(configName string, numbers []int) (any, error) {
-	conn, err := connectSystemBus()
+	conn, obj, err := connectSystemBus()
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
 
-	obj := conn.Object("org.opensuse.Snapper", "/org/opensuse/Snapper")
 	dbusNums := make([]uint32, len(numbers))
 	for i, n := range numbers {
 		dbusNums[i] = uint32(n)
